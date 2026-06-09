@@ -184,3 +184,29 @@ class GitHubService:
         except GithubException as exc:
             logger.warning("Failed to fetch repository tree for %s/%s: %s", owner, repo, exc)
             return []
+
+    def get_issue_comments(self, owner: str, repo: str, issue_number: int) -> List[Dict[str, Any]]:
+        """Return a structured list of comments for a specific issue."""
+        repo_obj = self._safe_repo(owner, repo)
+        if repo_obj is None:
+            return []
+
+        try:
+            issue = repo_obj.get_issue(issue_number)
+            comments = issue.get_comments()
+
+            results: List[Dict[str, Any]] = []
+            for idx, comment in enumerate(comments):
+                if idx >= 10:  # Limit comments to avoid excessive token usage
+                    break
+                results.append(
+                    {
+                        "author": comment.user.login if comment.user else "Ghost",
+                        "body": (comment.body or "")[:1000],  # Truncate to limit tokens
+                        "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                    }
+                )
+            return results
+        except GithubException as exc:
+            logger.warning("Failed to fetch comments for issue #%s in %s/%s: %s", issue_number, owner, repo, exc)
+            return []
