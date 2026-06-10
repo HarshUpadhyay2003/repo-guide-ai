@@ -2,11 +2,14 @@ import ast
 import json
 import logging
 import re
+import time
 from typing import Any, Dict
 
 from groq import Groq, GroqError
 
 from app.core.config import settings
+from app.services.token_manager import TokenBudgetManager
+from app.utils.performance_utils import estimate_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,7 @@ class LLMService:
         self.client = Groq(api_key=key)
         self.model = settings.MODEL_NAME
         self.temperature = 0.2
+        self.token_manager = TokenBudgetManager()
 
     def clean_model_response(self, text: str) -> str:
         """Clean raw model output before JSON parsing."""
@@ -75,7 +79,7 @@ class LLMService:
                     f"Model response was not valid JSON. Raw output: {raw_text}"
                 ) from fallback_exc
 
-    def generate_json(self, prompt: str) -> Dict[str, Any]:
+    def generate_json(self, prompt: str, service_name: str = "General") -> Dict[str, Any]:
         """Generate structured JSON from a prompt using Groq."""
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Prompt must be a non-empty string.")
@@ -90,6 +94,7 @@ class LLMService:
 
         for attempt in range(1, 4):
             try:
+                start_req = time.perf_counter()
                 response = self.client.chat.completions.create(
                     model=self.model,
                     temperature=self.temperature,
@@ -99,12 +104,35 @@ class LLMService:
                     ],
                     response_format={"type": "json_object"},
                 )
+                req_dur = time.perf_counter() - start_req
                 content = response.choices[0].message.content or ""
+                
+                start_ext = time.perf_counter()
                 parsed = self._extract_json(content)
+                ext_dur = time.perf_counter() - start_ext
                 logger.info("LLM JSON generation succeeded on attempt %s: %s", attempt, parsed)
+                logger.info("[LLM PERF INTERNAL]\nService: %s\nModel Response: %.2fs\nJSON Extraction: %.2fs", service_name, req_dur, ext_dur)
+                
+                prompt_chars = len(prompt)
+                resp_chars = len(content)
+                prompt_tokens = estimate_tokens(prompt)
+                resp_tokens = estimate_tokens(content)
+                
+                logger.info("[TOKEN PERF]\nService: %s\n\nPrompt Chars: %d\nPrompt Tokens: %d\n\nResponse Chars: %d\nResponse Tokens: %d\n", service_name, prompt_chars, prompt_tokens, resp_chars, resp_tokens)
+
+                self.token_manager.record_usage(service_name, prompt, content)
                 return parsed
             except (GroqError, ValueError, TypeError, json.JSONDecodeError) as exc:
                 last_error = exc
+                
+                exc_str = str(exc).lower()
+                if "rate_limit_exceeded" in exc_str or "429" in exc_str:
+                    match = re.search(r"try again in (\d+\.?\d*)s", exc_str)
+                    wait_time = float(match.group(1)) + 1.0 if match else 15.0
+                    logger.warning("Rate limit (429) hit for %s on attempt %d. Waiting %.2fs before retry...", service_name, attempt, wait_time)
+                    time.sleep(wait_time)
+                    continue
+                
                 logger.warning(
                     "LLM JSON generation attempt %s failed: %s",
                     attempt,

@@ -10,6 +10,8 @@ class IssueInput(BaseModel):
 
     issue: Dict[str, Any] = Field(..., description="Issue title, body, and labels")
     repo_summary: Dict[str, Any] = Field(..., description="Repository summary context")
+    repository_map: Dict[str, Any] = Field(..., description="Repository map context")
+    comments: List[Dict[str, Any]] = Field(default_factory=list, description="Issue comments")
 
     @field_validator("issue")
     @classmethod
@@ -36,6 +38,20 @@ class IssueInput(BaseModel):
         if not isinstance(value, dict):
             raise ValueError("repo_summary must be an object")
         return value
+        
+    @field_validator("repository_map")
+    @classmethod
+    def validate_repository_map(cls, value: Dict[str, Any]) -> Dict[str, Any]:
+        if not isinstance(value, dict):
+            raise ValueError("repository_map must be an object")
+        return value
+
+    @field_validator("comments")
+    @classmethod
+    def validate_comments(cls, value: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not isinstance(value, list):
+            raise ValueError("comments must be an array")
+        return value
 
 
 class IssueAnalysisOutput(BaseModel):
@@ -44,23 +60,19 @@ class IssueAnalysisOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     difficulty: str = Field(..., pattern=r"^(Beginner|Intermediate|Advanced)$")
-    estimated_hours: int = Field(..., ge=0, le=100)
     skills_required: List[str] = Field(default_factory=list)
-    concepts_to_understand: List[str] = Field(default_factory=list)
-    what_needs_to_be_done: str = Field(..., min_length=1)
+    affected_area: str = Field(..., min_length=1)
     beginner_explanation: str = Field(..., min_length=1)
-    files_likely_affected: List[str] = Field(default_factory=list)
-    recommended_first_step: str = Field(..., min_length=1)
     confidence_score: int = Field(..., ge=0, le=100)
 
-    @field_validator("skills_required", "concepts_to_understand", "files_likely_affected")
+    @field_validator("skills_required")
     @classmethod
     def validate_lists(cls, value: List[str]) -> List[str]:
         if not isinstance(value, list) or not all(isinstance(item, str) and item.strip() for item in value):
             raise ValueError("List fields must contain non-empty strings")
         return [item.strip() for item in value]
 
-    @field_validator("what_needs_to_be_done", "beginner_explanation", "recommended_first_step")
+    @field_validator("affected_area", "beginner_explanation")
     @classmethod
     def validate_text(cls, value: str) -> str:
         if not isinstance(value, str) or not value.strip():
