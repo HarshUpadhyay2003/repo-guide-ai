@@ -47,6 +47,7 @@ class RepoService:
         }
 
         try:
+            logger.warning("[DEBUG] ANALYZING ISSUE -> repo=%s issue=%s", repo, issue.get("number"))
             analysis = self.issue_service.analyze_issue(
                 {
                     "issue": issue_payload,
@@ -60,6 +61,7 @@ class RepoService:
 
         if analysis:
             try:
+                logger.warning("[DEBUG] HINTS INPUT -> repo=%s affected_area=%s", repo, analysis.get("affected_area"))
                 exploration_hints = self.exploration_hints_service.generate_hints(
                     {
                         "repository_map": repository_map,
@@ -86,11 +88,13 @@ class RepoService:
             parsed = parse_github_url(url)
             owner = parsed["owner"]
             repo = parsed["repo"]
+            logger.warning("[DEBUG] PARSER -> URL=%s OWNER=%s REPO=%s", url, owner, repo)
 
             start = time.perf_counter()
             metadata = self.github_service.get_repo_metadata(owner, repo)
             duration = time.perf_counter() - start
             logger.info("[PERF] Metadata Fetch: %.2fs", duration)
+            logger.warning("[DEBUG] METADATA RETURNED -> name=%s stars=%s", metadata.get("name"), metadata.get("stars"))
             if duration > 5.0:
                 logger.warning("[SLOW] Metadata Fetch took %.2fs", duration)
 
@@ -110,6 +114,7 @@ class RepoService:
             if duration > 5.0:
                 logger.warning("[SLOW] CONTRIBUTING Fetch took %.2fs", duration)
 
+            logger.warning("[DEBUG] SUMMARY INPUT -> repo=%s description=%s", metadata.get("name"), metadata.get("description"))
             summary_prompt = REPO_SUMMARY_PROMPT.format(
                 readme=readme or "",
                 contributing=contributing or "",
@@ -123,6 +128,7 @@ class RepoService:
                 logger.warning("[SLOW] Repository Summary Generation took %.2fs", duration)
 
             start = time.perf_counter()
+            logger.warning("[DEBUG] MAP INPUT -> owner=%s repo=%s", owner, repo)
             repository_map = {}
             try:
                 repository_map = self.repository_map_service.generate_map(owner=owner, repo=repo)
@@ -141,6 +147,7 @@ class RepoService:
             logger.info("[PERF] Repository Map Generation: %.2fs", duration)
             if duration > 5.0:
                 logger.warning("[SLOW] Repository Map Generation took %.2fs", duration)
+            logger.warning("[DEBUG] MAP GENERATED -> frontend=%d backend=%d", len(repository_map.get("frontend", [])), len(repository_map.get("backend", [])))
 
             start = time.perf_counter()
             raw_issues = self.github_service.get_good_first_issues(owner, repo)
@@ -148,6 +155,9 @@ class RepoService:
             logger.info("[PERF] Issue Discovery: %.2fs", duration)
             if duration > 5.0:
                 logger.warning("[SLOW] Issue Discovery took %.2fs", duration)
+            logger.warning("[DEBUG] ISSUES FOUND -> repo=%s count=%d", repo, len(raw_issues))
+            for issue in raw_issues[:3]:
+                logger.warning("[DEBUG] ISSUE -> #%s %s", issue.get("number"), issue.get("title"))
             
             if mode == "FAST_MVP":
                 top_issues = raw_issues[:2]
@@ -189,6 +199,7 @@ class RepoService:
             total_duration = time.perf_counter() - started_at
             logger.info("[PERF] Full Analysis Total Time: %.2fs", total_duration)
 
+            logger.warning("[DEBUG] FINAL RESPONSE -> metadata=%s issues=%d", metadata.get("name"), len(issues_with_analysis))
             return {
                 "metadata": metadata,
                 "summary": summary,

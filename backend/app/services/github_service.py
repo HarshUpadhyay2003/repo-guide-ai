@@ -54,6 +54,7 @@ class GitHubService:
 
     def get_readme(self, owner: str, repo: str) -> str:
         """Return the repository README content as text."""
+        logger.warning("[DEBUG] GITHUB -> get_readme(%s/%s)", owner, repo)
         repo_obj = self._safe_repo(owner, repo)
         if repo_obj is None:
             return ""
@@ -67,6 +68,7 @@ class GitHubService:
 
     def get_contributing(self, owner: str, repo: str) -> str:
         """Return the CONTRIBUTING file content if available."""
+        logger.warning("[DEBUG] GITHUB -> get_contributing(%s/%s)", owner, repo)
         repo_obj = self._safe_repo(owner, repo)
         if repo_obj is None:
             return ""
@@ -94,6 +96,7 @@ class GitHubService:
 
     def get_repo_metadata(self, owner: str, repo: str) -> Dict[str, Any]:
         """Return standardized repository metadata."""
+        logger.warning("[DEBUG] GITHUB -> get_repo_metadata(%s/%s)", owner, repo)
         repo_obj = self._safe_repo(owner, repo)
         if repo_obj is None:
             return {
@@ -116,6 +119,7 @@ class GitHubService:
 
     def get_good_first_issues(self, owner: str, repo: str) -> List[Dict[str, Any]]:
         """Return up to 20 open beginner-friendly issues using GitHub Search API."""
+        logger.warning("[DEBUG] GITHUB -> get_good_first_issues(%s/%s)", owner, repo)
         try:
             good_first_labels = ["good first issue", "help wanted", "beginner", "documentation"]
             results: List[Dict[str, Any]] = []
@@ -172,6 +176,7 @@ class GitHubService:
 
     def get_repository_tree(self, owner: str, repo: str) -> List[Dict[str, Any]]:
         """Return a repository directory tree using a single GitHub Tree API call."""
+        logger.warning("[DEBUG] GITHUB -> get_repository_tree(%s/%s)", owner, repo)
         repo_obj = self._safe_repo(owner, repo)
         if repo_obj is None:
             return []
@@ -187,6 +192,7 @@ class GitHubService:
 
     def get_issue_comments(self, owner: str, repo: str, issue_number: int) -> List[Dict[str, Any]]:
         """Return a structured list of comments for a specific issue."""
+        logger.warning("[DEBUG] GITHUB -> get_issue_comments(%s/%s)", owner, repo)
         repo_obj = self._safe_repo(owner, repo)
         if repo_obj is None:
             return []
