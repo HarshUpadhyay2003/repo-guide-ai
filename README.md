@@ -1,13 +1,20 @@
-# RepoGuideAI
-![Python](...)
-![FastAPI](...)
-![License](...)
-![Version](...)
-> AI-Powered Open Source Contribution Assistant
+<div align="center">
 
-RepoGuideAI helps developers understand unfamiliar repositories, evaluate beginner-friendly issues, and discover where to start contributing.
+# RepoGuideAI
+
+### AI-Powered Open Source Contribution Assistant
+
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Backend%20MVP-success)
+![Version](https://img.shields.io/badge/Version-v0.1.0-orange)
+
+Helping developers understand repositories, evaluate beginner-friendly issues, and discover where to start contributing.
 
 Instead of spending hours reading documentation, exploring thousands of files, and trying to understand cryptic issue descriptions, RepoGuideAI provides structured repository insights, issue explanations, and exploration guidance.
+
+
+</div>
 
 ---
 
