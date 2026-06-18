@@ -15,6 +15,7 @@ class RepoAnalyzeRequest(BaseModel):
 class RepoAnalyzeResponse(BaseModel):
     metadata: Dict[str, Any]
     summary: Dict[str, Any]
+    repository_map: Dict[str, Any]
     roadmap: Dict[str, Any]
     issues: list[Dict[str, Any]]
 
