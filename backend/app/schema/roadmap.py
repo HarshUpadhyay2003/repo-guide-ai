@@ -9,10 +9,12 @@ class RoadmapInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     repo_summary: Dict[str, Any] = Field(..., description="Repository summary context")
-    tree_analysis: Dict[str, Any] = Field(..., description="Repository folder analysis output")
+    repository_map: Dict[str, Any] = Field(..., description="Repository folder structure")
     issues: List[Dict[str, Any]] = Field(default_factory=list, description="Candidate issues")
+    all_files: List[str] = Field(default_factory=list, description="All files in repository tree")
+    all_dirs: List[str] = Field(default_factory=list, description="All directories in repository tree")
 
-    @field_validator("repo_summary", "tree_analysis")
+    @field_validator("repo_summary", "repository_map")
     @classmethod
     def validate_dicts(cls, value: Dict[str, Any]) -> Dict[str, Any]:
         if not isinstance(value, dict):

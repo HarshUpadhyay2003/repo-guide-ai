@@ -19,6 +19,8 @@ class Settings(BaseModel):
     GROQ_API_KEY: Annotated[str, StringConstraints(min_length=1)]
     DATABASE_URL: Annotated[str, StringConstraints(min_length=1)]
     MODEL_NAME: Annotated[str, StringConstraints(min_length=1)]
+    CACHE_BACKEND: str = "memory"
+    REDIS_URL: str = ""
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -29,6 +31,8 @@ class Settings(BaseModel):
             GROQ_API_KEY=os.environ.get("GROQ_API_KEY", ""),
             DATABASE_URL=os.environ.get("DATABASE_URL", ""),
             MODEL_NAME=os.environ.get("MODEL_NAME", ""),
+            CACHE_BACKEND=os.environ.get("CACHE_BACKEND", "memory"),
+            REDIS_URL=os.environ.get("REDIS_URL", ""),
         )
 
 

@@ -12,6 +12,8 @@ class ExplorationHintsInput(BaseModel):
     issue_analysis: Dict[str, Any] = Field(..., description="Beginner-friendly explanation of the issue")
     issue: Dict[str, Any] = Field(..., description="Raw issue data including title, body, and labels")
     comments: List[Dict[str, Any]] = Field(default_factory=list, description="Issue comments for maintainer hints")
+    all_files: List[str] = Field(default_factory=list, description="All files in repository tree")
+    all_dirs: List[str] = Field(default_factory=list, description="All directories in repository tree")
 
     @field_validator("repository_map", "issue_analysis", "issue")
     @classmethod

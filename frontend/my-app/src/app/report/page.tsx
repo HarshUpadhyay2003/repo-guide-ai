@@ -6,7 +6,6 @@ import { RepoHeader } from "../../components/report/RepoHeader";
 import { RepoSummaryCard } from "../../components/report/RepoSummaryCard";
 import { RepoMapSection } from "../../components/report/RepoMapSection";
 import { IssueList } from "../../components/report/IssueList";
-import { getAnalysis } from "../../services/analysisService";
 import PageContainer from "../../components/layout/PageContainer";
 
 function ReportContent() {
@@ -22,26 +21,20 @@ function ReportContent() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
     setIsLoading(true);
     
-    const fetchData = async () => {
-      try {
-        const response = await getAnalysis();
-        if (isMounted) {
-          // The real JSON wraps the payload in a "data" property
-          setData(response.data);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error(err);
-        if (isMounted) setIsLoading(false);
+    try {
+      const storedData = sessionStorage.getItem("repo_guide_analysis_data");
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        // Support direct payload or wrapped in 'data' layer just in case
+        setData(parsed.data || parsed);
       }
-    };
-
-    fetchData();
-
-    return () => { isMounted = false; };
+    } catch (err) {
+      console.error("Failed to load analysis from sessionStorage:", err);
+    } finally {
+      setIsLoading(false);
+    }
   }, [owner, name]);
 
   if (isLoading) {

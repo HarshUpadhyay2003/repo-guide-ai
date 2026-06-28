@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnalysisLoadingState } from "../../components/report/AnalysisLoadingState";
+import { useAnalysis } from "../../hooks/useAnalysis";
 
 function AnalyzeContent() {
   const router = useRouter();
@@ -16,18 +17,36 @@ function AnalyzeContent() {
     ? repoParam.split("/") 
     : ["PostHog", repoParam];
 
-  useEffect(() => {
-    // Simulate analysis flow timeline and redirect after 7 seconds
-    const timer = setTimeout(() => {
-      // Pass the stored repo parameter to the report page
-      router.replace(`/report?repo=${repoParam}`);
-    }, 7000);
+  const { analyzeRepo, isError } = useAnalysis();
+  const hasTriggeredRef = useRef(false);
 
-    return () => clearTimeout(timer);
-  }, [router, repoParam]);
+  useEffect(() => {
+    if (owner && name && !hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
+      analyzeRepo(
+        { url: `https://github.com/${owner}/${name}` },
+        {
+          onSuccess: (data) => {
+            sessionStorage.setItem("repo_guide_analysis_data", JSON.stringify(data));
+            router.replace(`/report?repo=${repoParam}`);
+          }
+        }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   // Render the existing loading component without recreating it
-  return <AnalysisLoadingState owner={owner} name={name} />;
+  return (
+    <>
+      {isError && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-500/10 text-red-500 px-4 py-2 rounded border border-red-500/50 z-50">
+          Analysis failed. Please try again.
+        </div>
+      )}
+      {!isError && <AnalysisLoadingState owner={owner} name={name} />}
+    </>
+  );
 }
 
 export default function AnalyzePage() {

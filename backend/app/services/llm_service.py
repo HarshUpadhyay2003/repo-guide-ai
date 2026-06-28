@@ -41,8 +41,11 @@ class LLMService:
 
         cleaned = re.sub(r"(?is)<reasoning>.*?</reasoning>", "", cleaned)
         cleaned = re.sub(r"(?is)here is the json:\s*", "", cleaned)
-        cleaned = re.sub(r"(?is)^.*?\{", "{", cleaned, count=1)
-        cleaned = re.sub(r"\}.*$", "}", cleaned, count=1)
+
+        first_brace = cleaned.find('{')
+        last_brace = cleaned.rfind('}')
+        if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+            cleaned = cleaned[first_brace:last_brace + 1]
 
         return cleaned.strip()
 
@@ -106,6 +109,9 @@ class LLMService:
                 )
                 req_dur = time.perf_counter() - start_req
                 content = response.choices[0].message.content or ""
+                if service_name == "Roadmap":
+                    print(f"ROADMAP RAW RESPONSE: {content}", flush=True)
+                    logger.info("ROADMAP RAW RESPONSE: %s", content)
                 
                 start_ext = time.perf_counter()
                 parsed = self._extract_json(content)

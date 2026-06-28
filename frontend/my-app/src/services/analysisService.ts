@@ -1,5 +1,6 @@
-import sampleData from "../../mock_data/sample_posthog_analysis.json";
+import { apiClient } from "./api";
 
-export async function getAnalysis() {
-  return sampleData;
+export async function analyzeRepository(payload: { url: string }) {
+  const response = await apiClient.post('/repo/analyze', payload);
+  return response.data;
 }
