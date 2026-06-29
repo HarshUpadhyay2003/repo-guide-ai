@@ -180,7 +180,6 @@ class GitHubService:
         key = get_repo_readme_key(owner, repo)
 
         def fetch() -> str:
-            logger.warning("[DEBUG] GITHUB -> get_readme(%s/%s)", owner, repo)
             repo_obj = self._safe_repo(owner, repo)
             if repo_obj is None:
                 raise DoNotCacheError("")
@@ -200,7 +199,6 @@ class GitHubService:
         key = get_repo_contributing_key(owner, repo)
 
         def fetch() -> str:
-            logger.warning("[DEBUG] GITHUB -> get_contributing(%s/%s)", owner, repo)
             repo_obj = self._safe_repo(owner, repo)
             if repo_obj is None:
                 raise DoNotCacheError("")
@@ -234,7 +232,6 @@ class GitHubService:
         key = get_repo_metadata_key(owner, repo)
 
         def fetch() -> Dict[str, Any]:
-            logger.warning("[DEBUG] GITHUB -> get_repo_metadata(%s/%s)", owner, repo)
             repo_obj = self._safe_repo(owner, repo)
             if repo_obj is None:
                 raise DoNotCacheError({
@@ -293,7 +290,6 @@ class GitHubService:
 
         def fetch() -> List[Dict[str, Any]]:
             self._issue_cache.clear()
-            logger.warning("[DEBUG] GITHUB -> get_good_first_issues(%s/%s)", owner, repo)
             good_first_labels = ["good first issue", "help wanted", "beginner", "documentation"]
             
             timings = {}
@@ -394,7 +390,6 @@ class GitHubService:
         key = get_repo_tree_key(owner, repo)
 
         def fetch() -> Dict[str, Any]:
-            logger.warning("[DEBUG] GITHUB -> get_repository_tree(%s/%s)", owner, repo)
             repo_obj = self._safe_repo(owner, repo)
             if repo_obj is None:
                 raise DoNotCacheError({"generated_at": "", "tree": []})
@@ -421,8 +416,6 @@ class GitHubService:
         display_name = f"Comments #{issue_number}"
 
         def fetch() -> List[Dict[str, Any]]:
-            logger.warning("[DEBUG] GITHUB -> get_issue_comments(%s/%s)", owner, repo)
-            
             issue_obj = self._issue_cache.get((owner, repo, issue_number))
             if issue_obj is None:
                 repo_obj = self._safe_repo(owner, repo)

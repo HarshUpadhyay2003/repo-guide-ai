@@ -388,6 +388,10 @@ class RepoService:
             print("==============================")
             print()
 
+            # Print LLM Reliability Summary
+            self.llm_service.print_reliability_summary()
+            print()
+
             print(f"[PERF] TOTAL /repo/analyze: {total_request_dur:.2f}s")
             self.metrics["total"] = total_request_dur
 
