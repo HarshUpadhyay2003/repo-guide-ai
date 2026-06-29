@@ -8,6 +8,12 @@ from app.schema.repository_map import RepositoryMap
 from app.services.github_service import GitHubService
 from constants import ENABLE_PERF_DIAGNOSTICS, MAX_DIRECTORY_ENTRIES, ENABLE_DEEP_PROFILING
 
+# Cache imports
+from app.core.cache.dependencies import get_cache_manager
+from app.core.cache.manager import CacheManager
+from app.core.cache.keys import get_repo_map_key
+from app.core.cache.config import CACHE_TTL_REPO_MAP
+
 logger = logging.getLogger(__name__)
 
 IGNORED_DIRS = {
@@ -86,8 +92,13 @@ FALLBACK_SUBSTRINGS = {
 class RepositoryMapService:
     """Analyze repository tree and categorize directories."""
 
-    def __init__(self, github_service: GitHubService | None = None) -> None:
+    def __init__(
+        self,
+        github_service: GitHubService | None = None,
+        cache_manager: CacheManager | None = None
+    ) -> None:
         self.github_service = github_service or GitHubService()
+        self.cache_manager = cache_manager or get_cache_manager()
 
     def _extract_important_directories(self, tree: List[Dict[str, Any]]) -> List[str]:
         """Extract top-level and important second/third-level directories."""
@@ -199,6 +210,28 @@ class RepositoryMapService:
         logger.info("Starting repository map generation for %s/%s", owner, repo)
         start_map = time.perf_counter()
         
+        # 1. Cache Read Attempt
+        key = None
+        cached_map = None
+        try:
+            key = get_repo_map_key(owner, repo)
+            cached_map = self.cache_manager.get(key)
+        except Exception as exc:
+            if isinstance(exc, (TypeError, ValueError)):
+                raise
+            logger.warning("[CACHE] Cache check failed for key %s: %s", key or "unknown", exc)
+
+        if cached_map is not None:
+            print("[CACHE][Repository Map] HIT")
+            
+            # Save metrics to self.metrics if available
+            if hasattr(self, "metrics") and isinstance(self.metrics, dict):
+                self.metrics["tree_map_gen_dur"] = time.perf_counter() - start_map
+                
+            return cached_map
+        else:
+            print("[CACHE][Repository Map] MISS")
+        
         tree_download_time = 0.0
 
         try:
@@ -218,7 +251,18 @@ class RepositoryMapService:
 
             if not directories:
                 logger.warning("No valid directories found to map.")
-                return RepositoryMap().model_dump()
+                empty_map = RepositoryMap().model_dump()
+                
+                # Cache empty map as well
+                if key:
+                    try:
+                        self.cache_manager.set(key, empty_map, CACHE_TTL_REPO_MAP)
+                        print("[CACHE WRITE][Repository Map]")
+                    except Exception as exc:
+                        if isinstance(exc, (TypeError, ValueError)):
+                            raise
+                        logger.warning("[CACHE] Cache write failed for key %s: %s", key, exc)
+                return empty_map
 
             classify_start = time.perf_counter()
             repo_map, diagnostics = self._classify_paths(directories)
@@ -242,7 +286,6 @@ class RepositoryMapService:
                 print(f"Directory Extraction Time: {extract_dur:.4f}s")
                 print()
                 print(f"Classification Time: {classify_dur:.4f}s")
-                print()
                 print(f"Map Generation Time: {map_gen_dur:.4f}s")
                 print()
 
@@ -279,8 +322,20 @@ class RepositoryMapService:
             if ENABLE_PERF_DIAGNOSTICS:
                 logger.info("Classification Diagnostics:\n%s", json.dumps(diagnostics, indent=2))
 
+            result_map = RepositoryMap(**limited_map).model_dump()
+
+            # Cache Write Attempt
+            if key:
+                try:
+                    self.cache_manager.set(key, result_map, CACHE_TTL_REPO_MAP)
+                    print("[CACHE WRITE][Repository Map]")
+                except Exception as exc:
+                    if isinstance(exc, (TypeError, ValueError)):
+                        raise
+                    logger.warning("[CACHE] Cache write failed for key %s: %s", key, exc)
+
             logger.info("Repository map generation completed successfully")
-            return RepositoryMap(**limited_map).model_dump()
+            return result_map
             
         except (ValueError, TypeError, KeyError, Exception) as exc:
             logger.exception("Repository map generation failed: %s", exc)
