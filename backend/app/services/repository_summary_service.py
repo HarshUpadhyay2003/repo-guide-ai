@@ -6,18 +6,59 @@ from app.services.llm_service import LLMService
 from app.utils.performance_utils import estimate_tokens
 from constants import ENABLE_DEEP_PROFILING
 
+# Cache imports
+from app.core.cache.dependencies import get_cache_manager
+from app.core.cache.manager import CacheManager
+from app.core.cache.keys import get_repo_summary_key
+from app.core.cache.config import CACHE_TTL_REPO_SUMMARY
+
 logger = logging.getLogger(__name__)
 
 class RepositorySummaryService:
     """Generate repository summaries and perform deep profiling."""
 
-    def __init__(self, llm_service: LLMService | None = None) -> None:
+    def __init__(
+        self,
+        llm_service: LLMService | None = None,
+        cache_manager: CacheManager | None = None
+    ) -> None:
         self.llm_service = llm_service or LLMService()
+        self.cache_manager = cache_manager or get_cache_manager()
 
     def generate_summary(self, metadata: Dict[str, Any], readme: str, contributing: str, prompt: str) -> Dict[str, Any]:
         """Generate repository summary with optional deep profiling diagnostics."""
         stage_start = time.perf_counter()
         start_time_sec = time.time()
+        
+        # 1. Cache Read Attempt
+        owner = metadata.get("owner")
+        repo = metadata.get("name") or metadata.get("repo")
+        
+        key = None
+        cached_summary = None
+        if owner and repo:
+            try:
+                key = get_repo_summary_key(owner, repo)
+                cached_summary = self.cache_manager.get(key)
+            except Exception as exc:
+                if isinstance(exc, (TypeError, ValueError)):
+                    raise
+                logger.warning("[CACHE] Cache check failed for key %s: %s", key or "unknown", exc)
+                
+            if cached_summary is not None:
+                print("[CACHE][Summary] HIT")
+                
+                # Save metrics to service context if available
+                stage_dur = time.perf_counter() - stage_start
+                if hasattr(self, "metrics") and isinstance(self.metrics, dict):
+                    self.metrics["summary_llm_generation"] = 0.0
+                    self.metrics["summary_json_parse"] = 0.0
+                    self.metrics["summary_schema_validation"] = 0.0
+                    self.metrics["summary_total"] = stage_dur
+                    
+                return cached_summary
+            else:
+                print("[CACHE][Summary] MISS")
         
         system_prompt = (
             "You are a strict JSON generator. Reply with valid JSON only, "
@@ -99,4 +140,14 @@ class RepositorySummaryService:
             self.metrics["summary_schema_validation"] = validation_dur
             self.metrics["summary_total"] = stage_dur
             
+        # Cache Write Attempt
+        if owner and repo and key and parsed:
+            try:
+                self.cache_manager.set(key, parsed, CACHE_TTL_REPO_SUMMARY)
+                print("[CACHE WRITE][Summary]")
+            except Exception as exc:
+                if isinstance(exc, (TypeError, ValueError)):
+                    raise
+                logger.warning("[CACHE] Cache write failed for key %s: %s", key, exc)
+
         return parsed

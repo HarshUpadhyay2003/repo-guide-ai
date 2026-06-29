@@ -235,6 +235,7 @@ class GitHubService:
             repo_obj = self._safe_repo(owner, repo)
             if repo_obj is None:
                 raise DoNotCacheError({
+                    "owner": owner,
                     "name": repo,
                     "description": "",
                     "stars": 0,
@@ -244,6 +245,7 @@ class GitHubService:
                 })
 
             return {
+                "owner": owner,
                 "name": repo_obj.name,
                 "description": repo_obj.description or "",
                 "stars": repo_obj.stargazers_count,
