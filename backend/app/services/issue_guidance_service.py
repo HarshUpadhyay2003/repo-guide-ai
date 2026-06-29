@@ -69,11 +69,22 @@ EXPECTED JSON SCHEMA:
 }}
 """
 
+# Cache imports
+from app.core.cache.dependencies import get_cache_manager
+from app.core.cache.manager import CacheManager
+from app.core.cache.keys import get_issue_guidance_key
+from app.core.cache.config import CACHE_TTL_ISSUE_GUIDANCE
+
 class IssueGuidanceService:
     """Analyze GitHub issues and generate exploration hints in a single LLM request."""
 
-    def __init__(self, llm_service: LLMService | None = None) -> None:
+    def __init__(
+        self,
+        llm_service: LLMService | None = None,
+        cache_manager: CacheManager | None = None
+    ) -> None:
         self.llm_service = llm_service or LLMService()
+        self.cache_manager = cache_manager or get_cache_manager()
 
     def normalize_guidance_response(self, data: Dict[str, Any], fallback_affected_area: str = "Unknown Area") -> Dict[str, Any]:
         """Repairs common schema deviations before Pydantic validation."""
@@ -87,7 +98,7 @@ class IssueGuidanceService:
             if "explanation" in analysis:
                 analysis["beginner_explanation"] = analysis.pop("explanation")
             elif "beginner_friendly_explanation" in analysis:
-                analysis["beginner_explanation"] = analysis.pop("beginner_friendly_explanation")
+                analysis["beginner_friendly_explanation"] = analysis.pop("beginner_friendly_explanation")
             else:
                 analysis["beginner_explanation"] = "No explanation provided."
 
@@ -177,6 +188,28 @@ class IssueGuidanceService:
             all_files = validated_payload.all_files
             all_dirs = validated_payload.all_dirs
 
+            # 1. Cache Read Attempt
+            owner = issue.get("owner")
+            repo = issue.get("repo")
+            issue_number = issue.get("number")
+
+            key = None
+            cached_guidance = None
+            if owner and repo and issue_number:
+                try:
+                    key = get_issue_guidance_key(owner, repo, issue_number)
+                    cached_guidance = self.cache_manager.get(key)
+                except Exception as exc:
+                    if isinstance(exc, (TypeError, ValueError)):
+                        raise
+                    logger.warning("[CACHE] Cache check failed for key %s: %s", key or "unknown", exc)
+
+                if cached_guidance is not None:
+                    print(f"[CACHE][Issue Guidance #{issue_number}] HIT")
+                    return cached_guidance
+                else:
+                    print(f"[CACHE][Issue Guidance #{issue_number}] MISS")
+
             metadata = repo_summary.get("metadata", {})
             repo_name = metadata.get("name", "Unknown Repo")
             repo_desc = metadata.get("description", "No description")
@@ -240,7 +273,6 @@ class IssueGuidanceService:
 
             # Audit diagnostics print
             approx_tokens = estimate_tokens(prompt)
-            issue_number = issue.get("number", "")
             print(f"[LLM PROMPT]\n\nIssue: #{issue_number}\nPrompt Tokens: {approx_tokens}\n")
 
             logger.info("Sending issue guidance prompt to LLM")
@@ -285,8 +317,20 @@ class IssueGuidanceService:
                     "issue_number": issue.get("number") if isinstance(issue, dict) else getattr(issue, "number", 0)
                 })
 
+            result_guidance = guidance.model_dump()
+
+            # Cache Write Attempt
+            if key and issue_number:
+                try:
+                    self.cache_manager.set(key, result_guidance, CACHE_TTL_ISSUE_GUIDANCE)
+                    print(f"[CACHE WRITE][Issue Guidance #{issue_number}]")
+                except Exception as exc:
+                    if isinstance(exc, (TypeError, ValueError)):
+                        raise
+                    logger.warning("[CACHE] Cache write failed for key %s: %s", key, exc)
+
             logger.info("Issue guidance generation completed successfully")
-            return guidance.model_dump()
+            return result_guidance
 
         except Exception as exc:
             logger.exception("Issue guidance generation failed (Validation/Execution): %s", exc)

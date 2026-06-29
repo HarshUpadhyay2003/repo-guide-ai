@@ -5,7 +5,7 @@ from typing import Final
 CACHE_TTL_REPO_METADATA: Final[int] =  3600       # 1 hour
 CACHE_TTL_REPO_SUMMARY: Final[int] = 86400        # 24 hours
 CACHE_TTL_REPO_MAP: Final[int] = 86400            # 24 hours
-CACHE_TTL_ISSUE_GUIDANCE: Final[int] = 86400      # 24 hours
+CACHE_TTL_ISSUE_GUIDANCE: Final[int] = 30  # 24 hours
 CACHE_TTL_ROADMAP: Final[int] = 86400             # 24 hours
 CACHE_TTL_FULL_ANALYSIS: Final[int] = 86400       # 24 hours
 

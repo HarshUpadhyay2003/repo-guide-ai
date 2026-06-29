@@ -54,6 +54,8 @@ class RepoService:
             "title": issue.get("title", ""),
             "body": issue.get("body", ""),
             "labels": issue.get("labels", []),
+            "owner": owner,
+            "repo": repo,
         }
 
         # Track combined issue guidance time
