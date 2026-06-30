@@ -36,6 +36,10 @@ def get_roadmap_key(owner: str, repo: str) -> str:
     o, r = _normalize(owner, repo)
     return f"cache:{CACHE_VERSION}:repo:{o}/{r}:roadmap"
 
+def get_repo_roadmap_key(owner: str, repo: str) -> str:
+    """Generate a deterministic, human-readable cache key for repository roadmap."""
+    return get_roadmap_key(owner, repo)
+
 def get_full_analysis_key(owner: str, repo: str) -> str:
     """Generate a deterministic, human-readable cache key for full repository analysis."""
     o, r = _normalize(owner, repo)

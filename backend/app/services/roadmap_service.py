@@ -9,6 +9,12 @@ from app.services.llm_service import LLMService
 from constants import ENABLE_PERF_DIAGNOSTICS
 from app.utils.file_ranking import score_file, get_candidate_files
 
+# Cache imports
+from app.core.cache.dependencies import get_cache_manager
+from app.core.cache.manager import CacheManager
+from app.core.cache.keys import get_repo_roadmap_key
+from app.core.cache.config import CACHE_TTL_ROADMAP
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,9 +84,14 @@ def calculate_issue_score(issue: Dict[str, Any]) -> float:
 class RoadmapService:
     """Generate a beginner-friendly contributor roadmap deterministically."""
 
-    def __init__(self, llm_service: LLMService | None = None) -> None:
+    def __init__(
+        self,
+        llm_service: LLMService | None = None,
+        cache_manager: CacheManager | None = None
+    ) -> None:
         # Keep parameter signature for backward compatibility, though not used
         self.llm_service = llm_service or LLMService()
+        self.cache_manager = cache_manager or get_cache_manager()
 
     def analyze_roadmap(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Create a personalized contribution roadmap from repo context and issues deterministically."""
@@ -88,7 +99,41 @@ class RoadmapService:
 
         try:
             roadmap_total_start = time.perf_counter()
-            
+
+            # 1. Cache Read Attempt
+            owner = None
+            repo = None
+            if isinstance(payload, dict):
+                repo_summary = payload.get("repo_summary", {})
+                if isinstance(repo_summary, dict):
+                    metadata = repo_summary.get("metadata", {})
+                    if isinstance(metadata, dict):
+                        owner = metadata.get("owner")
+                        repo = metadata.get("name") or metadata.get("repo")
+
+            key = None
+            cached_roadmap = None
+            if owner and repo:
+                try:
+                    key = get_repo_roadmap_key(owner, repo)
+                    cached_roadmap = self.cache_manager.get(key)
+                except Exception as exc:
+                    if isinstance(exc, (TypeError, ValueError)):
+                        raise
+                    logger.warning("[CACHE] Cache check failed for key %s: %s", key or "unknown", exc)
+
+                if cached_roadmap is not None:
+                    print("[CACHE][Roadmap] HIT")
+                    roadmap_total_dur = time.perf_counter() - roadmap_total_start
+                    if hasattr(self, "metrics") and isinstance(self.metrics, dict):
+                        self.metrics["roadmap_ranking"] = 0.0
+                        self.metrics["roadmap_assembly"] = 0.0
+                        self.metrics["roadmap_validation"] = 0.0
+                        self.metrics["roadmap_total"] = roadmap_total_dur
+                    return cached_roadmap
+                else:
+                    print("[CACHE][Roadmap] MISS")
+
             validated_payload = RoadmapInput.model_validate(payload)
             repo_summary = validated_payload.repo_summary
             issues = validated_payload.issues
@@ -274,7 +319,19 @@ class RoadmapService:
                 self.metrics["roadmap_validation"] = validation_dur
                 self.metrics["roadmap_total"] = roadmap_total_dur
 
-            return roadmap.model_dump()
+            result_roadmap = roadmap.model_dump()
+
+            # 2. Cache Write Attempt
+            if key:
+                try:
+                    self.cache_manager.set(key, result_roadmap, CACHE_TTL_ROADMAP)
+                    print("[CACHE WRITE][Roadmap]")
+                except Exception as exc:
+                    if isinstance(exc, (TypeError, ValueError)):
+                        raise
+                    logger.warning("[CACHE] Cache write failed for key %s: %s", key, exc)
+
+            return result_roadmap
 
         except Exception as exc:
             logger.exception("Deterministic roadmap generation failed: %s", exc)
