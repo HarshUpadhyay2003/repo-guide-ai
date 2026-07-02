@@ -1,4 +1,4 @@
-from app.pdf.styles.styles import (
+from app.pdf.styles.theme import (
     get_shared_styles,
     PAGE_MARGIN,
     COLOR_PRIMARY_PURPLE,
