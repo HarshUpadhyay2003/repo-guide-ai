@@ -465,7 +465,18 @@ class RepoService:
 
 
 
+            # Save the complete analysis snapshot in cache
+            try:
+                from app.core.cache.keys import get_analysis_snapshot_key
+                from app.core.cache.config import CACHE_TTL_ANALYSIS
+                analysis_key = get_analysis_snapshot_key(owner, repo)
+                cache_mgr.set(analysis_key, response_dict, ttl=CACHE_TTL_ANALYSIS)
+                logger.info(f"Successfully cached analysis snapshot for {owner}/{repo}")
+            except Exception as e:
+                logger.warning(f"Failed to cache analysis snapshot for {owner}/{repo}: {e}")
+
             return response_dict
+
         except (ValueError, LLMGenerationError, Exception) as exc:
             logger.exception("Repository analysis failed for %s: %s", url, exc)
             raise RuntimeError("Failed to analyze repository.") from exc

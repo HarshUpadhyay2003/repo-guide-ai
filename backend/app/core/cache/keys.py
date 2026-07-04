@@ -45,6 +45,12 @@ def get_full_analysis_key(owner: str, repo: str) -> str:
     o, r = _normalize(owner, repo)
     return f"cache:{CACHE_VERSION}:repo:{o}/{r}:full_analysis"
 
+def get_analysis_snapshot_key(owner: str, repo: str) -> str:
+    """Generate a deterministic, human-readable cache key for analysis snapshot."""
+    o, r = _normalize(owner, repo)
+    return f"cache:{CACHE_VERSION}:repo:{o}/{r}:analysis_snapshot"
+
+
 def get_repo_readme_key(owner: str, repo: str) -> str:
     """Generate a deterministic, human-readable cache key for repository README."""
     o, r = _normalize(owner, repo)

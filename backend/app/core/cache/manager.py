@@ -6,7 +6,7 @@ import time
 from typing import Any, Callable, Dict, Optional, Union
 
 from app.core.cache.base import CacheBackend
-from app.core.cache.keys import get_repo_summary_key, get_issue_guidance_key
+from app.core.cache.keys import get_repo_summary_key, get_issue_guidance_key, get_analysis_snapshot_key
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +191,11 @@ class CacheManager:
         """
         key = get_repo_summary_key(owner, repo)
         self.invalidate(key)
+
+    def get_analysis(self, owner: str, repo: str) -> Optional[Dict[str, Any]]:
+        """Retrieve the complete analysis snapshot from cache."""
+        key = get_analysis_snapshot_key(owner, repo)
+        return self.get(key)
 
     def cache_or_compute(
         self,

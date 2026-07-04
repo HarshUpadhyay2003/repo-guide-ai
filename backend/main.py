@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes_repo import router as repo_router
+from app.api.routes_pdf import router as pdf_router
 from app.services.repository_map_service import RepositoryMapService
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(repo_router)
+app.include_router(pdf_router)
 
 @app.on_event("startup")
 async def startup_event():
