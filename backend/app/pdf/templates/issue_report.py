@@ -17,6 +17,7 @@ from app.pdf.styles import (
     SPACING_LG
 )
 import datetime
+from app.pdf.utils.link_builder import build_issue_url
 
 class IssueReportTemplate:
     """
@@ -199,7 +200,8 @@ class IssueReportTemplate:
         flowables.append(create_section_title("4. Reference Section"))
         flowables.append(Spacer(1, SPACING_SM))
         
-        issue_url = raw_issue.get("html_url") or raw_issue.get("url") or f"https://github.com/{owner}/{repo}/issues/{issue_number}"
+        # Use the central Link Builder utility to construct the issue URL
+        issue_url = build_issue_url(raw_issue, issue_number)
         issue_link = f"<a href='{issue_url}'><font color='{COLOR_PRIMARY_PURPLE.hexval()}'><u>Link to GitHub Issue #{issue_number}</u></font></a>"
         
         labels = raw_issue.get("labels", [])

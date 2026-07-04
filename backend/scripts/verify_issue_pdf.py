@@ -14,7 +14,7 @@ load_dotenv(env_path)
 
 def main():
     # 1. Accept repository URL or default
-    default_url = "https://github.com/langchain-ai/langchain"
+    default_url = "https://github.com/pallets/flask/"
     repo_url = sys.argv[1] if len(sys.argv) > 1 else default_url
     
     print(f"Verifying Issue PDF Generation for: {repo_url}")

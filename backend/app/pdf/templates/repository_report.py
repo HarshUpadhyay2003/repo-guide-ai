@@ -11,6 +11,11 @@ from app.pdf.components import (
 from reportlab.platypus import Paragraph, Spacer
 from app.pdf.styles import get_shared_styles, SPACING_XS, SPACING_SM, SPACING_MD, SPACING_LG
 import datetime
+from app.pdf.utils.link_builder import (
+    build_repository_url,
+    build_readme_url,
+    build_contributing_url
+)
 
 class RepositoryReportTemplate:
     """

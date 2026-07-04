@@ -242,6 +242,7 @@ class GitHubService:
                     "forks": 0,
                     "language": "",
                     "topics": [],
+                    "default_branch": "main",
                 })
 
             return {
@@ -252,6 +253,7 @@ class GitHubService:
                 "forks": repo_obj.forks_count,
                 "language": repo_obj.language or "",
                 "topics": list(repo_obj.get_topics()) if hasattr(repo_obj, "get_topics") else [],
+                "default_branch": getattr(repo_obj, "default_branch", "main"),
             }
 
         return self._get_or_cache(key, CACHE_TTL_REPO_METADATA, "Metadata", fetch)
@@ -259,13 +261,48 @@ class GitHubService:
     def _search_label_issues(self, owner: str, repo: str, label: str) -> List[Any]:
         """Wrapper method for issue search by label to support future caching hooks."""
         query = f'repo:{owner}/{repo} label:"{label}" state:open is:issue'
-        search_results = self.client.search_issues(query=query, sort="created", order="desc")
-        issues_list = []
-        for idx, issue in enumerate(search_results):
-            if idx >= 10:
-                break
-            issues_list.append(issue)
-        return issues_list
+        try:
+            search_results = self.client.search_issues(query=query, sort="created", order="desc")
+            issues_list = []
+            for idx, issue in enumerate(search_results):
+                if idx >= 10:
+                    break
+                issues_list.append(issue)
+            return issues_list
+        except Exception as exc:
+            logger.info("Search failed with Search API, retrying via repository direct issues API: %s", exc)
+            try:
+                repo_obj = self._safe_repo(owner, repo)
+                if repo_obj:
+                    # Get issues directly from the repository using the label
+                    issues = repo_obj.get_issues(state="open", labels=[label])
+                    issues_list = []
+                    for issue in issues:
+                        if len(issues_list) >= 10:
+                            break
+                        # Filter out PRs if they are returned as issues (GitHub API returns PRs in /issues endpoint)
+                        raw_data = getattr(issue, "_rawData", None)
+                        if isinstance(raw_data, dict) and "pull_request" in raw_data:
+                            continue
+                        issues_list.append(issue)
+                    return issues_list
+            except Exception as direct_exc:
+                logger.warning("Repository direct issues API fallback also failed: %s", direct_exc)
+            
+            # Fall back to unauthenticated client for public repositories as a last resort
+            try:
+                from github import Github
+                unauth_client = Github()
+                search_results = unauth_client.search_issues(query=query, sort="created", order="desc")
+                issues_list = []
+                for idx, issue in enumerate(search_results):
+                    if idx >= 10:
+                        break
+                    issues_list.append(issue)
+                return issues_list
+            except Exception as unauth_exc:
+                logger.warning("Unauthenticated search fallback also failed: %s", unauth_exc)
+                raise exc
 
     def _fetch_issue_comments(self, issue_obj: Any) -> List[Dict[str, Any]]:
         """Wrapper method for issue comments fetch to support future caching hooks."""
