@@ -1,8 +1,11 @@
 <div align="center">
 
-# RepoPilot
+<h1>
+  <img src="frontend/my-app/public/logos/repo_pilot_icon_no_background.svg" alt="RepoPilot Logo" width="40" align="center" />
+  RepoPilot
+</h1>
 
-### AI-Powered Open Source Contribution Assistant
+#### AI-Powered Open Source Contribution Assistant
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)
