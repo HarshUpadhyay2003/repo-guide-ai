@@ -9,7 +9,7 @@ import { FinalCtaSection } from "../components/landing/FinalCtaSection";
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col font-sans selection:bg-indigo-500/30">
+    <div className="flex flex-col font-sans selection:bg-[#8B5CF6]/30">
       <HeroSection />
       <CommunityBanner />
       <ProblemSection />

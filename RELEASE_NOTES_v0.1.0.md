@@ -1,8 +1,8 @@
-# Release Notes: RepoGuideAI v0.1.0 (Backend MVP)
+# Release Notes: RepoPilot v0.1.0 (Backend MVP)
 
-We are thrilled to announce the v0.1.0 release of **RepoGuideAI**! 🚀
+We are thrilled to announce the v0.1.0 release of **RepoPilot**! 🚀
 
-RepoGuideAI is an AI-Powered Open Source Contribution Assistant. It helps developers understand unfamiliar GitHub repositories, evaluate beginner-friendly issues, and discover exactly where to start contributing. 
+RepoPilot is an AI-Powered Open Source Contribution Assistant. It helps developers understand unfamiliar GitHub repositories, evaluate beginner-friendly issues, and discover exactly where to start contributing. 
 
 This release marks the completion of our Backend MVP, successfully evolving the project from a simple repository summarizer into a robust, intelligent assistant engineered to eliminate the friction of open-source onboarding.
 
@@ -17,7 +17,7 @@ This release marks the completion of our Backend MVP, successfully evolving the 
 
 ## 🧪 Proven Validation
 
-The RepoGuideAI backend pipeline has been rigorously tested and validated against some of the largest open-source repositories in the world, including:
+The RepoPilot backend pipeline has been rigorously tested and validated against some of the largest open-source repositories in the world, including:
 - **PostHog**
 - **LangChain**
 - **Supabase**

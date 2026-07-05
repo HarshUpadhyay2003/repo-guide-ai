@@ -1,6 +1,6 @@
 <div align="center">
 
-# RepoGuideAI
+# RepoPilot
 
 ### AI-Powered Open Source Contribution Assistant
 
@@ -11,7 +11,7 @@
 
 Helping developers understand repositories, evaluate beginner-friendly issues, and discover where to start contributing.
 
-Instead of spending hours reading documentation, exploring thousands of files, and trying to understand cryptic issue descriptions, RepoGuideAI provides structured repository insights, issue explanations, and exploration guidance.
+Instead of spending hours reading documentation, exploring thousands of files, and trying to understand cryptic issue descriptions, RepoPilot provides structured repository insights, issue explanations, and exploration guidance.
 
 
 </div>
@@ -62,7 +62,7 @@ The challenge is answering:
 * Where should I start exploring?
 * Which files should I read first?
 
-RepoGuideAI was built to answer those questions.
+RepoPilot was built to answer those questions.
 
 ---
 
@@ -269,9 +269,9 @@ Sample analysis output:
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/RepoGuideAI.git
+git clone https://github.com/YOUR_USERNAME/RepoPilot.git
 
-cd RepoGuideAI/backend
+cd RepoPilot/backend
 ```
 
 Install dependencies:
@@ -354,7 +354,7 @@ backend/README.md
 
 ## Motivation
 
-RepoGuideAI evolved from a simple repository summarizer into an AI-powered contribution assistant focused on one goal:
+RepoPilot evolved from a simple repository summarizer into an AI-powered contribution assistant focused on one goal:
 
 > "I found a good first issue. Can I solve it, and where should I start?"
 

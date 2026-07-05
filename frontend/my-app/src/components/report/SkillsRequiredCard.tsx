@@ -6,11 +6,11 @@ interface SkillsRequiredCardProps {
 
 export default function SkillsRequiredCard({ skills }: SkillsRequiredCardProps) {
   return (
-    <div className="bg-slate-900 rounded-lg shadow-sm border border-slate-800 p-6 mb-6">
-      <h2 className="text-xl font-bold text-slate-100 mb-4">Skills Required</h2>
+    <div className="rounded-xl border border-white/5 bg-[#111217] p-6 shadow-lg hover:border-[#8B5CF6]/30 hover:shadow-[0_0_24px_rgba(139,92,246,0.10)] transition-all duration-300 mb-6">
+      <h2 className="text-xl font-bold text-slate-100 mb-4 font-sans">Skills Required</h2>
       <div className="flex flex-wrap gap-2">
         {skills.map((skill) => (
-          <span key={skill} className="px-3 py-1 bg-purple-400/10 text-purple-400 rounded-lg text-sm font-medium border border-purple-400/20">{skill}</span>
+          <span key={skill} className="px-3 py-1.5 bg-[#8B5CF6]/10 text-[#8B5CF6] rounded-md text-xs font-semibold border border-[#8B5CF6]/20 font-mono">{skill}</span>
         ))}
       </div>
     </div>

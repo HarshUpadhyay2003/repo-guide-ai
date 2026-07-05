@@ -49,7 +49,7 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
   };
 
   return (
-    <div className="flex flex-col gap-5 border-b border-slate-800 pb-8">
+    <div className="flex flex-col gap-5 border-b border-white/5 pb-8">
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight text-slate-50 md:text-4xl">
@@ -60,16 +60,16 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2 text-sm font-semibold text-slate-200 shadow-sm transition-colors hover:bg-slate-700 focus:outline-none cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/5 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 shadow-sm transition-all hover:bg-white/10 active:translate-y-px focus:outline-none cursor-pointer"
             >
               Export
               <ChevronDown className="h-4 w-4 text-slate-400" />
             </button>
 
             {isOpen && (
-              <div className="absolute right-0 mt-2 w-72 rounded-lg border border-slate-800 bg-slate-950 shadow-2xl z-50 py-1.5 text-slate-200">
+              <div className="absolute right-0 mt-2 w-72 rounded-lg border border-white/5 bg-[#111217] shadow-2xl z-50 py-1.5 text-slate-200">
                 {error && (
-                  <div className="px-3 py-1.5 text-xs text-rose-400 border-b border-slate-800">
+                  <div className="px-3 py-1.5 text-xs text-[#EF4444] border-b border-white/5">
                     {error}
                   </div>
                 )}
@@ -77,10 +77,10 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
                 <button
                   disabled={downloadingKey === "repo"}
                   onClick={() => handleDownload("repo")}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-left hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-indigo-400" />
+                    <FileText className="h-4 w-4 text-[#8B5CF6]" />
                     Repository Guide (PDF)
                   </span>
                   {downloadingKey === "repo" ? (
@@ -93,10 +93,10 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
                 <button
                   disabled={downloadingKey === "contrib"}
                   onClick={() => handleDownload("contrib")}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-left hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-indigo-400" />
+                    <FileText className="h-4 w-4 text-[#8B5CF6]" />
                     Contribution Guide (PDF)
                   </span>
                   {downloadingKey === "contrib" ? (
@@ -108,7 +108,7 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
 
                 {issues && issues.length > 0 && (
                   <>
-                    <div className="border-t border-slate-800 my-1"></div>
+                    <div className="border-t border-white/5 my-1"></div>
                     <div className="px-4 py-1 text-xs font-bold text-slate-500 uppercase tracking-wider">
                       Issue Guides
                     </div>
@@ -121,10 +121,10 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
                             key={issueNum}
                             disabled={isDownloading}
                             onClick={() => handleDownload(issueNum)}
-                            className="flex w-full items-center justify-between px-4 py-2 text-sm text-left hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            className="flex w-full items-center justify-between px-4 py-2 text-sm text-left hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                           >
                             <span className="truncate pr-4 flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-emerald-500 shrink-0" />
+                              <FileText className="h-4 w-4 text-[#2EC55E] shrink-0" />
                               <span className="truncate">Issue #{issueNum} Guide</span>
                             </span>
                             {isDownloading ? (
@@ -147,22 +147,22 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-300">
-        <div className="flex items-center gap-1.5 rounded-full bg-slate-800/60 px-3 py-1 shadow-sm">
-          <Star className="h-4 w-4 text-yellow-500" />
+        <div className="flex items-center gap-1.5 rounded-full bg-white/5 border border-white/5 px-3 py-1.5 shadow-sm font-mono text-xs">
+          <Star className="h-4 w-4 text-[#FACC15]" />
           <span>{(metadata.stars || 0).toLocaleString()} Stars</span>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-slate-800/60 px-3 py-1 shadow-sm">
+        <div className="flex items-center gap-1.5 rounded-full bg-white/5 border border-white/5 px-3 py-1.5 shadow-sm font-mono text-xs">
           <GitFork className="h-4 w-4 text-slate-400" />
           <span>{(metadata.forks || 0).toLocaleString()} Forks</span>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-slate-800/60 px-3 py-1 shadow-sm">
-          <Code2 className="h-4 w-4 text-indigo-400" />
+        <div className="flex items-center gap-1.5 rounded-full bg-white/5 border border-white/5 px-3 py-1.5 shadow-sm font-mono text-xs">
+          <Code2 className="h-4 w-4 text-[#8B5CF6]" />
           <span>{metadata.language || "Unknown"}</span>
         </div>
       </div>
       <div className="mt-1 flex flex-wrap gap-2">
         {(metadata.topics || []).map((topic: any) => (
-          <span key={topic} className="rounded-md bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-300 ring-1 ring-inset ring-indigo-500/20">
+          <span key={topic} className="rounded-md bg-[#8B5CF6]/10 px-2.5 py-1 text-xs font-semibold text-[#8B5CF6] border border-[#8B5CF6]/20 font-mono">
             {topic}
           </span>
         ))}

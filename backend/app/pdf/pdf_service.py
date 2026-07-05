@@ -14,7 +14,7 @@ class PDFService:
     This service is decoupled from specific repository or guide logic.
     """
     @staticmethod
-    def generate_pdf(flowables: list, has_cover: bool = True, title: str = "RepoGuideAI Report") -> bytes:
+    def generate_pdf(flowables: list, has_cover: bool = True, title: str = "RepoPilot Report") -> bytes:
         """
         Takes a list of ReportLab Flowables, wraps them in a SimpleDocTemplate
         configured with standard margins, runs the NumberedCanvas two-pass builder

@@ -34,7 +34,7 @@ class NumberedCanvas(canvas.Canvas):
         # Retrieve document template context
         doc = getattr(self, '_doctemplate', None)
         has_cover = getattr(doc, 'has_cover_page', False)
-        pdf_title = getattr(doc, 'pdf_title', "RepoGuideAI Report")
+        pdf_title = getattr(doc, 'pdf_title', "RepoPilot Report")
 
         # Skip header/footer on page 1 if a cover page is enabled
         if has_cover and self._pageNumber == 1:

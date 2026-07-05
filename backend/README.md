@@ -1,9 +1,9 @@
-# RepoGuideAI Backend
+# RepoPilot Backend
 
-RepoGuideAI analyzes GitHub repositories and automatically generates beginner-friendly contributor roadmaps, structural maps, and issue exploration hints using LLMs.
+RepoPilot analyzes GitHub repositories and automatically generates beginner-friendly contributor roadmaps, structural maps, and issue exploration hints using LLMs.
 
 ## Problem Statement
-Open-source onboarding is broken. New contributors spend hours reading scattered documentation and navigating massive codebases just to submit a single "good first issue". RepoGuideAI bridges this gap by automatically parsing the repository and generating intelligent, context-aware instructions for beginners.
+Open-source onboarding is broken. New contributors spend hours reading scattered documentation and navigating massive codebases just to submit a single "good first issue". RepoPilot bridges this gap by automatically parsing the repository and generating intelligent, context-aware instructions for beginners.
 
 ## Features
 - **Repository Mapping**: Deterministically categorizes directories (Frontend, Backend, Config, etc.) to orient new developers.

@@ -5,25 +5,25 @@ const features = [
     title: "Repository Summary",
     description: "Understand repository purpose, difficulty, learning time, and target users.",
     icon: BookOpen,
-    color: "text-indigo-400"
+    color: "text-[#8B5CF6]"
   },
   {
     title: "Repository Map",
     description: "Explore important frontend, backend, test, and configuration areas.",
     icon: FolderTree,
-    color: "text-blue-400"
+    color: "text-[#8B5CF6]"
   },
   {
     title: "Issue Analysis",
     description: "Translate complex GitHub issues into beginner-friendly explanations.",
     icon: BrainCircuit,
-    color: "text-emerald-400"
+    color: "text-[#8B5CF6]"
   },
   {
     title: "Exploration Hints",
     description: "Discover likely directories and files before reading thousands of lines of code.",
     icon: Map,
-    color: "text-amber-400"
+    color: "text-[#8B5CF6]"
   }
 ];
 
@@ -38,7 +38,7 @@ export function FeaturesSection() {
         </div>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           {features.map((feature, idx) => (
-            <div key={idx} className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 shadow-sm transition-colors hover:bg-slate-800/40 sm:p-8">
+            <div key={idx} className="flex flex-col gap-4 rounded-xl border border-white/5 bg-[#111217] p-6 shadow-lg hover:border-[#8B5CF6]/30 hover:shadow-[0_0_24px_rgba(139,92,246,0.10)] transition-all duration-300 sm:p-8">
               <div className="flex items-center gap-3">
                 <feature.icon className={`h-6 w-6 ${feature.color}`} />
                 <h3 className="text-xl font-bold text-slate-100">{feature.title}</h3>

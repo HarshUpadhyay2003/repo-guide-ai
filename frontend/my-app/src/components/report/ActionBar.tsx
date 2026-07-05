@@ -42,7 +42,7 @@ export function ActionBar({ owner, repo, downloadType, issueNumber }: ActionBarP
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link
           href={`/report?repo=${owner}/${repo}`}
-          className="inline-flex items-center text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+          className="inline-flex items-center text-sm font-semibold text-[#8B5CF6] hover:text-[#7C3AED] transition-colors font-sans"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Repository
@@ -50,7 +50,7 @@ export function ActionBar({ owner, repo, downloadType, issueNumber }: ActionBarP
         <button
           onClick={handleDownload}
           disabled={isDownloading}
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-colors hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#8B5CF6] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#7C3AED] active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-sans"
         >
           {isDownloading ? (
             <>
@@ -66,7 +66,7 @@ export function ActionBar({ owner, repo, downloadType, issueNumber }: ActionBarP
         </button>
       </div>
       {error && (
-        <div className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-3 text-xs text-rose-400 self-end">
+        <div className="rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/20 p-3 text-xs text-[#EF4444] self-end font-sans">
           {error}
         </div>
       )}

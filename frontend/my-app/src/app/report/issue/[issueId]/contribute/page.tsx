@@ -27,9 +27,9 @@ export default async function ContributionPage({ params }: ContributionPageProps
   if (!data) {
     return (
       <PageContainer>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center">
-          <h1 className="text-2xl font-bold text-rose-400">Contribution guide not found</h1>
-          <Link href={`/report/issue/${issueId}`} className="text-purple-400 hover:text-purple-300 mt-4 inline-block hover:underline">Return to Issue</Link>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center font-sans">
+          <h1 className="text-2xl font-bold text-[#EF4444]">Contribution guide not found</h1>
+          <Link href={`/report/issue/${issueId}`} className="text-[#8B5CF6] hover:text-[#7C3AED] mt-4 inline-block hover:underline">Return to Issue</Link>
         </div>
       </PageContainer>
     );

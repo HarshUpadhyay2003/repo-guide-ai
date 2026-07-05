@@ -43,7 +43,7 @@ function ReportContent() {
 
   if (!data) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-slate-950 text-rose-400">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-background text-[#EF4444] font-sans">
         Failed to load repository analysis.
       </div>
     );
@@ -64,7 +64,7 @@ function ReportContent() {
 
 export default function ReportPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400">Loading Report...</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-background text-slate-400 font-sans">Loading Report...</div>}>
       <ReportContent />
     </Suspense>
   );

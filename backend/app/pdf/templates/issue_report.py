@@ -25,7 +25,7 @@ class IssueReportTemplate:
     Composes shared visual components using real backend issue analysis data.
     """
     @staticmethod
-    def generate(issue_data: dict, repo_name: str = None, author: str = "RepoGuideAI", date_str: str = None) -> bytes:
+    def generate(issue_data: dict, repo_name: str = None, author: str = "RepoPilot", date_str: str = None) -> bytes:
         styles = get_shared_styles()
         flowables = []
         
@@ -71,7 +71,7 @@ class IssueReportTemplate:
             "Generated At": date_str or datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         flowables.extend(create_cover_page(
-            title="RepoGuideAI",
+            title="RepoPilot",
             subtitle=f"Issue Guide: {issue_title}",
             metadata=cover_metadata
         ))

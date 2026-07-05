@@ -1,12 +1,12 @@
-# Contributing to RepoGuideAI
+# Contributing to RepoPilot
 
-First off, thank you for considering contributing to RepoGuideAI! It's developers like you that make RepoGuideAI such a powerful tool for the open-source community. 
+First off, thank you for considering contributing to RepoPilot! It's developers like you that make RepoPilot such a powerful tool for the open-source community. 
 
-RepoGuideAI helps developers understand unfamiliar GitHub repositories, evaluate beginner-friendly issues, and discover where to start contributing. 
+RepoPilot helps developers understand unfamiliar GitHub repositories, evaluate beginner-friendly issues, and discover where to start contributing. 
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the RepoGuideAI Code of Conduct. By participating, you are expected to uphold this code.
+This project and everyone participating in it is governed by the RepoPilot Code of Conduct. By participating, you are expected to uphold this code.
 
 ## Getting Started
 
@@ -16,8 +16,8 @@ The current project architecture consists of a Python FastAPI backend. (The Next
 
 1. **Fork and Clone the Repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/RepoGuideAI.git
-   cd RepoGuideAI/backend
+   git clone https://github.com/YOUR_USERNAME/RepoPilot.git
+   cd RepoPilot/backend
    ```
 
 2. **Set up the Virtual Environment**

@@ -1,4 +1,5 @@
-import { FolderTree, Folder } from "lucide-react";
+import { useState } from "react";
+import { FolderTree, Folder, ChevronDown } from "lucide-react";
 import { RepositoryMap } from "../../../repository";
 
 interface RepoMapSectionProps {
@@ -18,31 +19,61 @@ export function RepoMapSection({ repoMap }: RepoMapSectionProps) {
     { key: "scripts", label: "Scripts" },
   ];
 
+  // Open by default
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
+    frontend: true,
+    backend: true,
+    tests: true,
+    docs: true,
+    config: true,
+    scripts: true,
+  });
+
+  const toggleCategory = (key: string) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   return (
-    <div className="flex flex-col gap-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 shadow-sm sm:p-8">
-      <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-200">
-        <FolderTree className="h-5 w-5 text-indigo-400" />
+    <div className="flex flex-col gap-6 rounded-xl border border-white/5 bg-[#111217] p-6 shadow-lg hover:border-[#8B5CF6]/30 hover:shadow-[0_0_24px_rgba(139,92,246,0.10)] transition-all duration-300 sm:p-8 animate-fade-in-up">
+      <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-200 font-sans">
+        <FolderTree className="h-5 w-5 text-[#8B5CF6]" />
         Repository Map
       </h2>
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map(({ key, label }) => {
           const paths = repoMap[key] as string[];
           // Only display the category if the backend analysis found folders for it
           if (!paths || paths.length === 0) return null;
           
+          const isOpen = openCategories[key];
+
           return (
-            <div key={key} className="flex flex-col gap-4">
-              <h3 className="border-b border-slate-800 pb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-                {label}
-              </h3>
-              <ul className="flex flex-col gap-2.5">
-                {paths.map((path) => (
-                  <li key={path} className="flex items-center gap-2.5 text-sm text-slate-300">
-                    <Folder className="h-4 w-4 shrink-0 text-slate-600" />
-                    <span className="truncate" title={path}>{path}</span>
-                  </li>
-                ))}
-              </ul>
+            <div key={key} className="flex flex-col rounded-xl border border-white/5 bg-black/20 p-4 transition-all duration-300">
+              <button
+                onClick={() => toggleCategory(key)}
+                className="flex w-full items-center justify-between border-b border-white/5 pb-2 text-xs font-bold uppercase tracking-wider text-slate-500 font-sans cursor-pointer group"
+              >
+                <span className="group-hover:text-slate-300 transition-colors">{label}</span>
+                <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#8B5CF6]" : "rotate-0"}`} />
+              </button>
+              
+              <div 
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  isOpen ? "max-h-60 opacity-100 mt-3" : "max-h-0 opacity-0 pointer-events-none"
+                }`}
+              >
+                <ul className="flex flex-col gap-2.5 max-h-48 overflow-y-auto pr-1.5 custom-scrollbar">
+                  {paths.map((path) => (
+                    <li key={path} className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-white transition-colors py-0.5">
+                      <Folder className="h-4 w-4 shrink-0 text-[#8B5CF6]/70" />
+                      <span className="truncate font-mono text-xs" title={path}>{path}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           );
         })}

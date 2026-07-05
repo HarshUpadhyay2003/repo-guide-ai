@@ -9,15 +9,15 @@ interface PreviewCardProps {
 
 function PreviewCard({ title, description, icon: Icon, imageSrc }: PreviewCardProps) {
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 shadow-xl">
+    <div className="flex h-full flex-col gap-4 rounded-xl border border-white/5 bg-[#111217] p-4 shadow-lg hover:border-[#8B5CF6]/30 hover:shadow-[0_0_24px_rgba(139,92,246,0.10)] transition-all duration-300">
       <div className="flex items-center gap-3 px-2 pt-2">
-        <Icon className="h-5 w-5 text-indigo-400" />
+        <Icon className="h-5 w-5 text-[#8B5CF6]" />
         <div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">{title}</h3>
           <p className="text-xs text-slate-400">{description}</p>
         </div>
       </div>
-      <div className="relative flex-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 min-h-[200px] sm:min-h-[300px] flex items-center justify-center">
+      <div className="relative flex-1 overflow-hidden rounded-xl border border-white/5 bg-black/30 min-h-[200px] sm:min-h-[300px] flex items-center justify-center font-sans">
         {imageSrc ? (
           <img src={imageSrc} alt={`${title} Preview`} className="h-full w-full object-cover" />
         ) : (
@@ -39,7 +39,7 @@ export function PreviewSection() {
           <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
             Example Output Preview
           </h2>
-          <p className="mt-4 text-lg text-slate-400">See how RepoGuideAI breaks down complex repositories.</p>
+          <p className="mt-4 text-lg text-slate-400">See how RepoPilot breaks down complex repositories.</p>
         </div>
         <div className="flex flex-col gap-12">
           <PreviewCard 

@@ -1,6 +1,6 @@
 # Project Status
 
-**Project:** RepoGuideAI  
+**Project:** RepoPilot  
 **Tagline:** AI-Powered Open Source Contribution Assistant  
 **Current Version:** v0.1.0 (Backend MVP)
 

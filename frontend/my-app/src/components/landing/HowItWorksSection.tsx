@@ -6,7 +6,7 @@ const steps = [
 
 export function HowItWorksSection() {
   return (
-    <section className="border-y border-slate-800/60 bg-slate-900/20 py-24">
+    <section className="border-y border-white/5 bg-[#111217]/10 py-24 font-sans">
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <div className="mb-16 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
@@ -16,7 +16,7 @@ export function HowItWorksSection() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {steps.map((step, idx) => (
             <div key={idx} className="relative flex flex-col gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-2xl font-bold text-white shadow-md">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#8B5CF6] text-2xl font-bold text-white shadow-md font-mono">
                 {idx + 1}
               </div>
               <div>

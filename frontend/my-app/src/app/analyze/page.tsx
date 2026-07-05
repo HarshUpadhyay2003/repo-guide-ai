@@ -40,7 +40,7 @@ function AnalyzeContent() {
   return (
     <>
       {isError && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-500/10 text-red-500 px-4 py-2 rounded border border-red-500/50 z-50">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-[#EF4444]/10 text-[#EF4444] px-4 py-2 rounded-lg border border-[#EF4444]/50 z-50 font-sans">
           Analysis failed. Please try again.
         </div>
       )}
@@ -51,8 +51,8 @@ function AnalyzeContent() {
 
 export default function AnalyzePage() {
   return (
-    <main className="min-h-screen bg-slate-950">
-      <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-slate-400">Initializing Analysis...</div>}>
+    <main className="min-h-screen bg-background">
+      <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-slate-400 font-sans">Initializing Analysis...</div>}>
         <AnalyzeContent />
       </Suspense>
     </main>

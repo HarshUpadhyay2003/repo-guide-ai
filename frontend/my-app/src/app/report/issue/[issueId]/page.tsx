@@ -31,9 +31,9 @@ export default async function IssuePage({ params, searchParams }: IssuePageProps
   if (!issueData) {
     return (
       <PageContainer>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center">
-          <h1 className="text-2xl font-bold text-rose-400">Issue not found</h1>
-          <Link href="/report" className="text-purple-400 hover:text-purple-300 mt-4 inline-block hover:underline">Return to Report</Link>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center font-sans">
+          <h1 className="text-2xl font-bold text-[#EF4444]">Issue not found</h1>
+          <Link href="/report" className="text-[#8B5CF6] hover:text-[#7C3AED] mt-4 inline-block hover:underline">Return to Report</Link>
         </div>
       </PageContainer>
     );

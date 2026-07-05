@@ -20,7 +20,7 @@ def draw_footer(canvas_obj, doc, current_page: int, total_pages: int):
     canvas_obj.drawCentredString(page_width / 2.0, y_pos, page_str)
     
     # Left brand string
-    canvas_obj.drawString(left_margin, y_pos, "RepoGuideAI")
+    canvas_obj.drawString(left_margin, y_pos, "RepoPilot")
     
     # Running footer line
     canvas_obj.setStrokeColor(COLOR_BORDER)

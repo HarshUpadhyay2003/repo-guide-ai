@@ -1,6 +1,6 @@
 # Support
 
-Need help with RepoGuideAI? We are here to assist you!
+Need help with RepoPilot? We are here to assist you!
 
 ## Where to Get Help
 
@@ -19,4 +19,4 @@ When reporting a bug on the issue tracker, please include:
 - Information about your local environment (OS, Python version).
 
 ## Feature Requests
-RepoGuideAI is rapidly evolving from an AI repository summarizer to a full Open Source Contribution Assistant. If you have ideas for new features, please submit an issue labeled as `enhancement`. Include a clear description of the use case and how it fits into the broader onboarding and contribution workflow.
+RepoPilot is rapidly evolving from an AI repository summarizer to a full Open Source Contribution Assistant. If you have ideas for new features, please submit an issue labeled as `enhancement`. Include a clear description of the use case and how it fits into the broader onboarding and contribution workflow.
