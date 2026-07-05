@@ -9,15 +9,23 @@ import ExplorationHintsSection from '@/components/report/ExplorationHintsSection
 import InvestigationReasoningCard from '@/components/report/InvestigationReasoningCard';
 import GenerateGuideCTA from '@/components/report/GenerateGuideCTA';
 import PageContainer from '@/components/layout/PageContainer';
+import { ActionBar } from '@/components/report/ActionBar';
 
 interface IssuePageProps {
   params: Promise<{
     issueId: string;
   }>;
+  searchParams: Promise<{
+    repo?: string;
+  }>;
 }
 
-export default async function IssuePage({ params }: IssuePageProps) {
+export default async function IssuePage({ params, searchParams }: IssuePageProps) {
   const { issueId } = await params;
+  const { repo } = await searchParams;
+  const repoParam = repo || "PostHog/posthog";
+  const [owner, name] = repoParam.includes("/") ? repoParam.split("/") : ["PostHog", repoParam];
+  
   const issueData = await getMockIssueDetails(issueId);
 
   if (!issueData) {
@@ -34,10 +42,7 @@ export default async function IssuePage({ params }: IssuePageProps) {
   return (
     <PageContainer>
       <div className="max-w-4xl mx-auto w-full">
-        <Link href="/report" className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 mb-6 transition-colors">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          Back to Analysis Report
-        </Link>
+        <ActionBar owner={owner} repo={name} downloadType="issue" issueNumber={issueId} />
         
         <IssueDetailHeader 
           number={issueData.number}

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { AnalyzedIssue } from "../../types/analysis";
-import { Target, TrendingUp, Wrench, Tag, ArrowRight } from "lucide-react";
+import { Target, TrendingUp, Wrench, Tag, ArrowRight, Download, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { downloadIssueGuide } from "../../services/pdfService";
 
 interface IssueCardProps {
   issue: AnalyzedIssue;
@@ -10,6 +12,21 @@ interface IssueCardProps {
 
 export function IssueCard({ issue, owner, repo }: IssueCardProps) {
   const { raw_issue, analysis } = issue;
+
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    setError(null);
+    try {
+      await downloadIssueGuide(owner, repo, raw_issue.number);
+    } catch (err: any) {
+      setError(err.message || "An error occurred.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const getConfidenceColor = (score: number) => {
     if (score >= 80) return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
@@ -65,11 +82,33 @@ export function IssueCard({ issue, owner, repo }: IssueCardProps) {
       </div>
 
       {/* CTA Footer */}
-      <div className="mt-2 pt-4 border-t border-slate-800/60">
+      <div className="mt-2 pt-4 border-t border-slate-800/60 flex flex-col gap-2">
         <Link href={`/report/issue/${raw_issue.number}?repo=${owner}/${repo}`} className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600/10 px-4 py-2.5 text-sm font-semibold text-indigo-400 transition-colors hover:bg-indigo-600 hover:text-white">
           View Analysis
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Link>
+        <button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {isDownloading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4 text-slate-400" />
+              Download Issue Guide
+            </>
+          )}
+        </button>
+        {error && (
+          <p className="text-xs text-rose-400 text-center mt-1">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -54,7 +54,7 @@ function ReportContent() {
 
   return (
     <PageContainer>
-      <RepoHeader metadata={dynamicMetadata} />
+      <RepoHeader metadata={dynamicMetadata} owner={owner} repo={name} issues={data.issues} />
       <RepoSummaryCard summary={data.summary} />
       <RepoMapSection repoMap={data.repository_map} />
       <IssueList issues={data.issues} owner={owner} repo={name} />
