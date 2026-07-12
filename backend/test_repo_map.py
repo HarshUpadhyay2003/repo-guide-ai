@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 
 from app.services.repository_map_service import RepositoryMapService
 
-def test_repo(owner, repo):
+def run_repo_test(owner, repo):
     print("=" * 80)
     print(f"TESTING REPOSITORY: {owner}/{repo}")
     print("=" * 80)
@@ -40,4 +40,4 @@ if __name__ == '__main__':
         ("appwrite", "appwrite")
     ]
     for owner, repo in repos:
-        test_repo(owner, repo)
+        run_repo_test(owner, repo)

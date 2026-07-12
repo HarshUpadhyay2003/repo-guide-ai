@@ -10,6 +10,8 @@ from app.services.repository_map_service import RepositoryMapService
 
 class TestRepositoryMapClassification(unittest.TestCase):
     def setUp(self):
+        import app.services.repository_map_service as rms
+        rms.ENABLE_PERF_DIAGNOSTICS = True
         # We don't need a real github_service since we are testing internal methods directly
         self.service = RepositoryMapService(github_service=None)
 

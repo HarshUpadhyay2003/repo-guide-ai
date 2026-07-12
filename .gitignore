@@ -212,3 +212,4 @@ next-env.d.ts
 
 #random folders
 generated/
+evaluation_outputs/

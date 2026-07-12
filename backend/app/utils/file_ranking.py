@@ -1,3 +1,4 @@
+import os
 import re
 from functools import lru_cache
 from typing import List, Tuple, Dict, Any
@@ -85,7 +86,8 @@ def _score_file_cached(
     file_path: str,
     issue_title: str,
     affected_area: str,
-    issue_labels_tuple: Tuple[str, ...]
+    issue_labels_tuple: Tuple[str, ...],
+    explicit_paths_tuple: Tuple[str, ...] = ()
 ) -> Tuple[int, Tuple[str, ...]]:
     reasons = []
     score = 0
@@ -154,6 +156,44 @@ def _score_file_cached(
                 matched_keywords.append(kw)
         if matched_keywords:
             reasons.append(f"Keyword scoring ({', '.join(sorted(matched_keywords))}): +{len(matched_keywords) * 50}")
+
+    # 4. Explicit Path evidence boost (Component 3 V2)
+    def normalize_path(p: str) -> str:
+        p = p.strip("`'\" \t")
+        if p.startswith("/"):
+            p = p[1:]
+        p = p.replace("\\", "/")
+        return p
+
+    f_norm = normalize_path(file_path)
+    f_lower = f_norm.lower()
+    f_base = os.path.basename(f_lower)
+    f_parts = f_lower.split("/")
+
+    explicit_boost = 0
+    explicit_reasons = []
+
+    for ep in explicit_paths_tuple:
+        ep_norm = normalize_path(ep)
+        ep_lower = ep_norm.lower()
+        ep_base = os.path.basename(ep_lower)
+
+        if f_lower == ep_lower:
+            explicit_boost = max(explicit_boost, 10000)
+            explicit_reasons = ["Exact explicit repository path match: +10000"]
+        elif f_lower.endswith("/" + ep_lower):
+            explicit_boost = max(explicit_boost, 5000)
+            explicit_reasons = ["Normalized explicit path suffix match: +5000"]
+        elif f_base == ep_base and "." in f_base:
+            explicit_boost = max(explicit_boost, 2500)
+            explicit_reasons = ["Explicit filename match within repository tree: +2500"]
+        elif ep_lower in f_parts or (len(ep_lower) > 2 and ep_lower in f_lower):
+            explicit_boost = max(explicit_boost, 1000)
+            explicit_reasons = ["Explicit directory/module reference: +1000"]
+
+    if explicit_boost > 0:
+        score += explicit_boost
+        reasons.extend(explicit_reasons)
             
     return score, tuple(reasons)
 
@@ -161,10 +201,12 @@ def score_file(
     file_path: str,
     issue_title: str,
     affected_area: str,
-    issue_labels: List[str]
+    issue_labels: List[str],
+    explicit_paths: List[str] = None
 ) -> Tuple[int, List[str]]:
     labels_tuple = tuple(issue_labels) if issue_labels else ()
-    score, reasons_tuple = _score_file_cached(file_path, issue_title, affected_area, labels_tuple)
+    explicit_paths_tuple = tuple(explicit_paths) if explicit_paths else ()
+    score, reasons_tuple = _score_file_cached(file_path, issue_title, affected_area, labels_tuple, explicit_paths_tuple)
     return score, list(reasons_tuple)
 
 # Bounded cache for candidate files
