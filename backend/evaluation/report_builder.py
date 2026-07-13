@@ -126,7 +126,12 @@ class ReportBuilder:
                 issue_guidance_score += 1.0
                 
             # 2. Success level of budget compression / attempts (out of 6.0)
-            succ_attempt = trace.successful_attempt
+            budget_info = getattr(trace, "context_budgeting", None)
+            if budget_info and getattr(budget_info, "capture_status", "NOT_OBSERVED") != "NOT_OBSERVED":
+                succ_attempt = budget_info.selected_attempt
+            else:
+                succ_attempt = trace.successful_attempt
+
             if succ_attempt == 1:
                 issue_guidance_score += 6.0
             elif succ_attempt == 2:

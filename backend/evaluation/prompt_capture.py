@@ -527,6 +527,114 @@ def EvaluationCaptureContext(report: EvaluationReport, exec_mode: str = "prod", 
             report.roadmap.timing = dur
         return res
 
+    def _capture_budgeting_telemetry(service_inst, issue_trace):
+        budget_ctx = getattr(service_inst, "_last_budgeted_context", None)
+        if budget_ctx:
+            from evaluation.benchmark_models import ContextBudgetingCaptured, IssueGuidanceAttempt
+            captured = ContextBudgetingCaptured(
+                budget_status=budget_ctx.budget_status,
+                budget_limit=budget_ctx.budget_limit,
+                selected_attempt=budget_ctx.selected_attempt,
+                selected_mode=budget_ctx.selected_mode,
+                estimated_prompt_tokens=budget_ctx.estimated_tokens,
+                static_template_tokens=budget_ctx.static_template_tokens,
+                dynamic_context_tokens=budget_ctx.dynamic_context_tokens,
+                included_sections=budget_ctx.included_sections,
+                removed_sections=budget_ctx.removed_sections,
+                protected_evidence_count=budget_ctx.protected_evidence_count,
+                critical_evidence_included_count=budget_ctx.critical_evidence_included_count,
+                strong_evidence_included_count=budget_ctx.strong_evidence_included_count,
+                explicit_path_count=budget_ctx.explicit_path_count,
+                explicit_paths_included_count=budget_ctx.explicit_paths_included_count,
+                candidate_files_available_count=budget_ctx.candidate_files_available_count,
+                candidate_files_included_count=budget_ctx.candidate_files_included_count,
+                candidate_files_included=budget_ctx.candidate_files_included,
+                issue_segments_included_count=budget_ctx.issue_segments_included_count,
+                comment_segments_included_count=budget_ctx.comment_segments_included_count,
+                protected_core_integrity_status=budget_ctx.protected_core_integrity_status,
+                integrity_failures=budget_ctx.integrity_failures,
+                emergency_core_used=budget_ctx.emergency_core_used,
+                additional_llm_calls_from_context_budgeting=budget_ctx.additional_llm_calls_from_context_budgeting,
+                context_budgeting_ms=budget_ctx.context_budgeting_ms,
+                capture_status=budget_ctx.capture_status,
+                critical_evidence_available_count=budget_ctx.critical_evidence_available_count,
+                strong_evidence_available_count=budget_ctx.strong_evidence_available_count,
+                explicit_paths_available_count=budget_ctx.explicit_paths_available_count
+            )
+            
+            attempts_list = []
+            attempt_configs = {
+                1: {
+                    "include_readme": True, "compress_readme": False,
+                    "include_contributing": True, "compress_contributing": False,
+                    "include_comments": True, "include_map": True,
+                    "removed_context": "None",
+                    "remaining_context": "README, CONTRIBUTING, COMMENTS, REPOSITORY MAP"
+                },
+                2: {
+                    "include_readme": True, "compress_readme": False,
+                    "include_contributing": True, "compress_contributing": False,
+                    "include_comments": True, "include_map": True,
+                    "removed_context": "COMMENTS",
+                    "remaining_context": "README, CONTRIBUTING, REPOSITORY MAP"
+                },
+                3: {
+                    "include_readme": True, "compress_readme": True,
+                    "include_contributing": True, "compress_contributing": True,
+                    "include_comments": False, "include_map": True,
+                    "removed_context": "COMMENTS (Removed), README/CONTRIBUTING (Compressed)",
+                    "remaining_context": "README (Compressed), CONTRIBUTING (Compressed), REPOSITORY MAP"
+                },
+                4: {
+                    "include_readme": False, "compress_readme": False,
+                    "include_contributing": False, "compress_contributing": False,
+                    "include_comments": False, "include_map": True,
+                    "removed_context": "COMMENTS, README, CONTRIBUTING, REPOSITORY MAP",
+                    "remaining_context": "None (Minimal Mode)"
+                },
+                5: {
+                    "include_readme": False, "compress_readme": False,
+                    "include_contributing": False, "compress_contributing": False,
+                    "include_comments": False, "include_map": True,
+                    "removed_context": "COMMENTS, README, CONTRIBUTING, REPOSITORY MAP",
+                    "remaining_context": "EMERGENCY CORE"
+                }
+            }
+            
+            all_prompts = getattr(budget_ctx, "all_attempt_prompts", {}) or {}
+            for att_num, att_prompt in sorted(all_prompts.items()):
+                is_success = (att_num == budget_ctx.selected_attempt)
+                status = "Success" if is_success else "Budget Exceeded"
+                
+                cfg = attempt_configs.get(att_num, {
+                    "include_readme": False, "compress_readme": False,
+                    "include_contributing": False, "compress_contributing": False,
+                    "include_comments": False, "include_map": False,
+                    "removed_context": "None", "remaining_context": ""
+                })
+                
+                attempt_obj = IssueGuidanceAttempt(
+                    attempt_number=att_num,
+                    prompt=att_prompt,
+                    prompt_tokens=estimate_tokens(att_prompt),
+                    status=status,
+                    include_readme=cfg["include_readme"],
+                    include_contributing=cfg["include_contributing"],
+                    include_comments=cfg["include_comments"],
+                    include_map=cfg["include_map"],
+                    compress_readme=cfg["compress_readme"],
+                    compress_contributing=cfg["compress_contributing"],
+                    removed_context=cfg["removed_context"],
+                    remaining_context=cfg["remaining_context"],
+                    sent_to_llm=is_success
+                )
+                attempts_list.append(attempt_obj)
+                
+            with lock:
+                issue_trace.context_budgeting = captured
+                issue_trace.attempts = attempts_list
+                issue_trace.successful_attempt = budget_ctx.selected_attempt
+
     # --- IssueGuidanceService Interceptors ---
     @functools.wraps(orig_guidance_gen)
     def wrapped_guidance_gen(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -550,11 +658,16 @@ def EvaluationCaptureContext(report: EvaluationReport, exec_mode: str = "prod", 
                 res = orig_guidance_gen(self, payload)
                 ev.output = json.dumps(res)
                 dur = time.perf_counter() - t0
+                
+                # Capture Stage 12.2.3 Context Budgeting telemetry
+                _capture_budgeting_telemetry(self, trace)
+
                 with lock:
                     trace.final_guidance_json = res
                     trace.timings["total"] = dur
                 return res
             except Exception as exc:
+                _capture_budgeting_telemetry(self, trace)
                 with lock:
                     report.errors.validation_errors.append(f"Issue #{issue_number}: {exc}")
                 raise

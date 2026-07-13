@@ -104,6 +104,37 @@ class ClassificationReconciliationCaptured(BaseModel):
     classification_reconciliation_ms: float = 0.0
     capture_status: str = "NOT_OBSERVED"
 
+class ContextBudgetingCaptured(BaseModel):
+    budget_status: str = "NOT_OBSERVED"
+    budget_limit: int = 1500
+    selected_attempt: int = 0
+    selected_mode: str = ""
+    estimated_prompt_tokens: int = 0
+    static_template_tokens: int = 0
+    dynamic_context_tokens: int = 0
+    included_sections: List[str] = Field(default_factory=list)
+    removed_sections: List[str] = Field(default_factory=list)
+    protected_evidence_count: int = 0
+    critical_evidence_included_count: int = 0
+    strong_evidence_included_count: int = 0
+    explicit_path_count: int = 0
+    explicit_paths_included_count: int = 0
+    candidate_files_available_count: int = 0
+    candidate_files_included_count: int = 0
+    candidate_files_included: List[str] = Field(default_factory=list)
+    issue_segments_included_count: int = 0
+    comment_segments_included_count: int = 0
+    protected_core_integrity_status: str = "NOT_APPLICABLE"
+    integrity_failures: List[str] = Field(default_factory=list)
+    emergency_core_used: bool = False
+    additional_llm_calls_from_context_budgeting: int = 0
+    context_budgeting_ms: float = 0.0
+    capture_status: str = "NOT_OBSERVED"
+    critical_evidence_available_count: int = 0
+    strong_evidence_available_count: int = 0
+    explicit_paths_available_count: int = 0
+    all_attempt_prompts: Dict[int, str] = Field(default_factory=dict)
+
 class IssueGuidanceTrace(BaseModel):
     issue_number: int
     title: str = ""
@@ -124,6 +155,7 @@ class IssueGuidanceTrace(BaseModel):
     timings: Dict[str, float] = Field(default_factory=dict)
     technical_evidence: Optional[TechnicalEvidenceCaptured] = None
     classification_reconciliation: Optional[ClassificationReconciliationCaptured] = None
+    context_budgeting: Optional[ContextBudgetingCaptured] = None
 
 class RoadmapCaptured(BaseModel):
     raw_json: Dict[str, Any] = Field(default_factory=dict)

@@ -13,6 +13,7 @@ from constants import ENABLE_PERF_DIAGNOSTICS
 from app.utils.performance_utils import estimate_tokens
 from app.utils.evidence_extractor import TechnicalEvidenceItem, extract_technical_evidence
 from app.utils.classification_reconciler import reconcile_issue_classification, ClassificationReconciliationResult
+from app.utils.context_budgeter import budget_and_assemble_prompt, BudgetedPromptContext
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ EXPECTED JSON SCHEMA:
 
 COMPRESSED_GUIDANCE_PROMPT_INSTRUCTIONS = """Instructions for generating each JSON field:
 1. "analysis":
-   - "beginner_explanation": Explain the issue simply for a beginner.
+   - "beginner_explanation": Explain the issue simply for a beginner. Treat PROTECTED TECHNICAL EVIDENCE as higher authority than generic repository descriptions.
    - "skills_required": List of required skills (e.g. Python, React).
    - "affected_area": Module or layout area affected.
    - "difficulty": Must be "Beginner", "Intermediate", or "Advanced".
@@ -46,7 +47,7 @@ COMPRESSED_GUIDANCE_PROMPT_INSTRUCTIONS = """Instructions for generating each JS
 2. "exploration_hints":
    - "affected_area": Module or layout area affected.
    - "likely_directories": Most likely directories (CRITICAL: Must be selected from Candidate Directories).
-   - "possible_files": Possible files to explore (CRITICAL: Must be selected from Candidate Files. Never invent or guess file names).
+   - "possible_files": Possible files to explore (CRITICAL: When Candidate Files & Evidence contains grounded repository paths, use those paths when identifying possible files. Do not state that filenames are unknown unless the candidate list is empty. Never invent or guess file names).
    - "reasoning": Explain why these are relevant.
    - "confidence": Confidence score from 0 to 100."""
 
@@ -1136,57 +1137,16 @@ class IssueGuidanceService:
             json_schema_text = COMPRESSED_GUIDANCE_PROMPT_SCHEMA
 
             # Adaptive prompt builder loop
-            MAX_PROMPT_TOKENS = 1500
-            attempt = 0
-            success = False
-            response = None
-            prompt_tokens = 0
-
-            # Gather explicit path directories for candidate dirs fallback
-            top_candidates = [c["path"] for c in candidate_evidence.candidates]
-            candidate_dirs = sorted(list(set(os.path.dirname(f) for f in top_candidates if os.path.dirname(f))))
-
-            while attempt < 4 and not success:
-                attempt += 1
-                
-                # Determine sections inclusion based on attempt configuration
-                if attempt == 1:
-                    include_map = True
-                    include_comments = True
-                    compress_readme = False
-                    compress_contributing = False
-                    include_readme = True
-                    include_contributing = True
-                elif attempt == 2:
-                    include_map = True
-                    include_comments = False
-                    compress_readme = False
-                    compress_contributing = False
-                    include_readme = True
-                    include_contributing = True
-                elif attempt == 3:
-                    include_map = True
-                    include_comments = False
-                    compress_readme = True
-                    compress_contributing = True
-                    include_readme = True
-                    include_contributing = True
-                else: # Attempt 4 (Minimal)
-                    include_map = False
-                    include_comments = False
-                    compress_readme = False
-                    compress_contributing = False
-                    include_readme = False
-                    include_contributing = False
-
-                # Stage 6: Prompt Assembly
-                t_stage = time.perf_counter()
-                prompt = self._assemble_prompt(
+            prompt = ""
+            budget_success = False
+            self._last_budgeted_context = None
+            
+            try:
+                prompt, budgeted_context = budget_and_assemble_prompt(
                     repo_name=repo_name,
                     repo_desc=repo_desc,
                     repo_context=repo_context,
                     candidate_evidence=candidate_evidence,
-                    candidate_dirs=candidate_dirs,
                     issue_intel=issue_intel,
                     issue_evidence=issue_evidence,
                     readme_raw=readme_raw,
@@ -1196,49 +1156,145 @@ class IssueGuidanceService:
                     comments=comments,
                     instructions_text=instructions_text,
                     json_schema_text=json_schema_text,
-                    include_map=include_map,
-                    include_comments=include_comments,
-                    compress_readme=compress_readme,
-                    compress_contributing=compress_contributing,
-                    include_readme=include_readme,
-                    include_contributing=include_contributing
+                    budget_limit=1500
                 )
-                logger.info("Prompt Assembly Completed in %.4fs (Attempt %d)", time.perf_counter() - t_stage, attempt)
-                print(f"Prompt Assembly Completed (Attempt {attempt}).")
+                self._last_budgeted_context = budgeted_context
+                prompt_tokens = budgeted_context.estimated_tokens
+                budget_success = True
+                print(f"Context Budgeting Successful: Selected Mode '{budgeted_context.selected_mode}' ({prompt_tokens} tokens)")
+                logger.info("Context Budgeting Selected Mode: %s (%d tokens)", budgeted_context.selected_mode, prompt_tokens)
+            except Exception as budgeting_err:
+                logger.exception("Context Budgeting failed, using Stage 12.2.2 fallback: %s", budgeting_err)
+                print("Context Budgeting failed, using Stage 12.2.2 fallback.")
+                
+                from app.utils.context_budgeter import BudgetedPromptContext
+                self._last_budgeted_context = BudgetedPromptContext(
+                    resolved_classification=f"{issue_intel.category} / {issue_intel.subsystem}",
+                    protected_evidence="",
+                    explicit_paths="",
+                    candidate_files="",
+                    issue_context="",
+                    repository_context="",
+                    optional_context="",
+                    included_sections=[],
+                    removed_sections=[],
+                    estimated_tokens=0,
+                    budget_limit=1500,
+                    protected_evidence_count=0,
+                    candidate_file_count=0,
+                    explicit_path_count=0,
+                    budget_status="BUDGETING_FAILED",
+                    selected_attempt=0,
+                    selected_mode="FALLBACK",
+                    static_template_tokens=0,
+                    dynamic_context_tokens=0,
+                    candidate_files_available_count=len(candidate_evidence.candidates) if candidate_evidence else 0,
+                    candidate_files_included_count=0,
+                    candidate_files_included=[],
+                    critical_evidence_included_count=0,
+                    strong_evidence_included_count=0,
+                    explicit_paths_included_count=0,
+                    issue_segments_included_count=0,
+                    comment_segments_included_count=0,
+                    protected_core_integrity_status="FAILED",
+                    integrity_failures=[str(budgeting_err)],
+                    emergency_core_used=False,
+                    capture_status="BUDGETING_FAILED"
+                )
 
-                # Observability & Section token calculations
-                prompt_tokens = estimate_tokens(prompt)
-                
-                print(f"\n--------------------------------------------------")
-                print(f"Attempt {attempt}")
-                print(f"--------------------------------------------------")
-                print(f"Prompt Tokens: {prompt_tokens}")
-                print(f"Budget: {MAX_PROMPT_TOKENS}")
-                print("\nIncluded:")
-                print(f"{'[Y]' if include_readme else '[N]'} README" + (" (Compressed)" if (include_readme and compress_readme) else ""))
-                print(f"{'[Y]' if include_contributing else '[N]'} CONTRIBUTING" + (" (Compressed)" if (include_contributing and compress_contributing) else ""))
-                print(f"{'[Y]' if include_comments else '[N]'} COMMENTS")
-                print(f"{'[Y]' if include_map else '[N]'} REPOSITORY MAP")
-                print(f"--------------------------------------------------\n")
-                
-                if prompt_tokens > MAX_PROMPT_TOKENS:
-                    print(f"[BUDGET EXCEEDED] Prompt size {prompt_tokens} exceeds budget {MAX_PROMPT_TOKENS}. Degrading to next attempt level.")
-                    continue
-                    
-                print("Prompt fits within budget. Sending to LLM...")
-                # Stage 7: LLM
+            # Execution block
+            success = False
+            response = None
+            
+            if budget_success:
+                print("Sending budgeted prompt to LLM...")
                 try:
                     response = self.llm_service.generate_json(prompt, service_name="Issue Guidance")
                     success = True
-                    print("Guidance Generated Successfully")
-                    break
+                    print("Guidance Generated Successfully via Budgeted Prompt")
                 except Exception as e:
-                    print(f"LLM Call failed on Attempt {attempt}: {e}")
-                    logger.warning("LLM Call failed on Attempt %d: %s", attempt, e)
+                    print(f"LLM Call failed on Budgeted Prompt: {e}")
+                    logger.warning("LLM Call failed on Budgeted Prompt: %s", e)
+            
+            # Fallback to the existing Stage 12.2.2 degradation loop if budgeting failed or LLM failed on budgeted prompt
+            if not success:
+                print("Falling back to Stage 12.2.2 size-driven degradation loop...")
+                MAX_PROMPT_TOKENS = 1500
+                attempt = 0
+                top_candidates = [c["path"] for c in candidate_evidence.candidates]
+                candidate_dirs = sorted(list(set(os.path.dirname(f) for f in top_candidates if os.path.dirname(f))))
+
+                while attempt < 4 and not success:
+                    attempt += 1
+                    if attempt == 1:
+                        include_map = True
+                        include_comments = True
+                        compress_readme = False
+                        compress_contributing = False
+                        include_readme = True
+                        include_contributing = True
+                    elif attempt == 2:
+                        include_map = True
+                        include_comments = False
+                        compress_readme = False
+                        compress_contributing = False
+                        include_readme = True
+                        include_contributing = True
+                    elif attempt == 3:
+                        include_map = True
+                        include_comments = False
+                        compress_readme = True
+                        compress_contributing = True
+                        include_readme = True
+                        include_contributing = True
+                    else: # Attempt 4
+                        include_map = False
+                        include_comments = False
+                        compress_readme = False
+                        compress_contributing = False
+                        include_readme = False
+                        include_contributing = False
+
+                    t_stage = time.perf_counter()
+                    prompt = self._assemble_prompt(
+                        repo_name=repo_name,
+                        repo_desc=repo_desc,
+                        repo_context=repo_context,
+                        candidate_evidence=candidate_evidence,
+                        candidate_dirs=candidate_dirs,
+                        issue_intel=issue_intel,
+                        issue_evidence=issue_evidence,
+                        readme_raw=readme_raw,
+                        contributing_raw=contributing_raw,
+                        issue_body=issue_body,
+                        issue_labels_str=issue_labels_str,
+                        comments=comments,
+                        instructions_text=instructions_text,
+                        json_schema_text=json_schema_text,
+                        include_map=include_map,
+                        include_comments=include_comments,
+                        compress_readme=compress_readme,
+                        compress_contributing=compress_contributing,
+                        include_readme=include_readme,
+                        include_contributing=include_contributing
+                    )
+                    prompt_tokens = estimate_tokens(prompt)
+                    
+                    if prompt_tokens > MAX_PROMPT_TOKENS:
+                        continue
+                        
+                    try:
+                        response = self.llm_service.generate_json(prompt, service_name="Issue Guidance")
+                        success = True
+                        break
+                    except Exception as e:
+                        logger.warning("LLM Call failed on Fallback Attempt %d: %s", attempt, e)
 
             # Fallback Guidance Generation if all retries failed
             if not success:
                 print("All attempts failed or exceeded budget. Using Graceful Fallback.")
+                top_candidates = [c["path"] for c in candidate_evidence.candidates]
+                candidate_dirs = sorted(list(set(os.path.dirname(f) for f in top_candidates if os.path.dirname(f))))
                 fallback_data = self._generate_graceful_fallback(
                     issue_title=issue_title,
                     issue_labels=issue_labels,

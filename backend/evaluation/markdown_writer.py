@@ -241,6 +241,45 @@ class MarkdownWriter:
                 else:
                     md.write("*No classification reconciliation telemetry captured.*\n\n")
 
+                # G. Stage 12.2.3 — Evidence-Priority Context Budgeting
+                budget_captured = getattr(trace, "context_budgeting", None)
+                md.write("#### Stage 12.2.3 — Evidence-Priority Context Budgeting\n\n")
+                if budget_captured and budget_captured.capture_status != "NOT_OBSERVED":
+                    md.write(f"- **Capture Status**: {budget_captured.capture_status}\n")
+                    md.write(f"- **Budget Status**: **{budget_captured.budget_status}**\n\n")
+                    
+                    md.write("| Metric | Value |\n")
+                    md.write("| --- | --- |\n")
+                    md.write(f"| **Budget Limit** | {budget_captured.budget_limit} |\n")
+                    md.write(f"| **Selected Attempt** | {budget_captured.selected_attempt} |\n")
+                    md.write(f"| **Selected Mode** | {budget_captured.selected_mode} |\n")
+                    md.write(f"| **Estimated Prompt Tokens** | {budget_captured.estimated_prompt_tokens} |\n")
+                    md.write(f"| **Static Template Tokens** | {budget_captured.static_template_tokens} |\n")
+                    md.write(f"| **Dynamic Context Tokens** | {budget_captured.dynamic_context_tokens} |\n")
+                    md.write(f"| **Protected Core Integrity** | {budget_captured.protected_core_integrity_status} |\n")
+                    md.write(f"| **Emergency Core Used** | {budget_captured.emergency_core_used} |\n")
+                    md.write(f"| **Additional LLM Calls** | {budget_captured.additional_llm_calls_from_context_budgeting} |\n")
+                    md.write(f"| **Budgeting Latency** | {budget_captured.context_budgeting_ms:.2f} ms |\n\n")
+                    
+                    md.write(f"- **Included Sections**: {', '.join(budget_captured.included_sections) or 'None'}\n")
+                    md.write(f"- **Removed Sections**: {', '.join(budget_captured.removed_sections) or 'None'}\n\n")
+                    
+                    md.write("**Evidence Preservation Metrics:**\n")
+                    md.write(f"- Critical Evidence: {budget_captured.critical_evidence_available_count} available / {budget_captured.critical_evidence_included_count} included\n")
+                    md.write(f"- Strong Evidence: {budget_captured.strong_evidence_available_count} available / {budget_captured.strong_evidence_included_count} included\n")
+                    md.write(f"- Explicit Paths: {budget_captured.explicit_paths_available_count} available / {budget_captured.explicit_paths_included_count} included\n")
+                    md.write(f"- Candidate Files: {budget_captured.candidate_files_available_count} available / {budget_captured.candidate_files_included_count} included\n\n")
+                    
+                    md.write("**Included Candidate File Paths:**\n")
+                    if budget_captured.candidate_files_included:
+                        for path in budget_captured.candidate_files_included:
+                            md.write(f"- `{path}`\n")
+                    else:
+                        md.write("- *None*\n")
+                    md.write("\n")
+                else:
+                    md.write("*No context budgeting telemetry captured.*\n\n")
+
                 # C. Repository Context
                 ctx = trace.repo_context
                 md.write("#### Repository Context\n")
@@ -595,15 +634,18 @@ class MarkdownWriter:
                         file_rec_str = "N/A"
                         overall_match_str = "N/A"
                     
-                    succ_attempt = trace.successful_attempt or "Fallback"
-                    
-                    # Gather prompt tokens and completion tokens
-                    prompt_t = 0
-                    completion_t = 0
-                    if isinstance(succ_attempt, int) and succ_attempt <= len(trace.attempts):
-                        prompt_t = trace.attempts[succ_attempt - 1].prompt_tokens
-                        # Estimate completion tokens from length of response
-                        completion_t = estimate_tokens(trace.raw_llm_response)
+                    budget_info = getattr(trace, "context_budgeting", None)
+                    if budget_info and getattr(budget_info, "capture_status", "NOT_OBSERVED") != "NOT_OBSERVED":
+                        succ_attempt = budget_info.selected_attempt
+                        prompt_t = budget_info.estimated_prompt_tokens
+                        completion_t = estimate_tokens(trace.raw_llm_response) if getattr(trace, "raw_llm_response", None) else 0
+                    else:
+                        succ_attempt = trace.successful_attempt or "Fallback"
+                        prompt_t = 0
+                        completion_t = 0
+                        if isinstance(succ_attempt, int) and succ_attempt <= len(trace.attempts):
+                            prompt_t = trace.attempts[succ_attempt - 1].prompt_tokens
+                            completion_t = estimate_tokens(trace.raw_llm_response)
                         
                     writer.writerow([
                         repo_name,
@@ -666,10 +708,15 @@ class MarkdownWriter:
                     else:
                         overall_match_str = "N/A"
                     
-                    succ_attempt = trace.successful_attempt or "Fallback"
-                    prompt_t = 0
-                    if isinstance(succ_attempt, int) and succ_attempt <= len(trace.attempts):
-                        prompt_t = trace.attempts[succ_attempt - 1].prompt_tokens
+                    budget_info = getattr(trace, "context_budgeting", None)
+                    if budget_info and getattr(budget_info, "capture_status", "NOT_OBSERVED") != "NOT_OBSERVED":
+                        succ_attempt = budget_info.selected_attempt
+                        prompt_t = budget_info.estimated_prompt_tokens
+                    else:
+                        succ_attempt = trace.successful_attempt or "Fallback"
+                        prompt_t = 0
+                        if isinstance(succ_attempt, int) and succ_attempt <= len(trace.attempts):
+                            prompt_t = trace.attempts[succ_attempt - 1].prompt_tokens
                         
                     f.write(f"| {repo_name} | #{trace.issue_number} | {r.metrics_scores.summary_score} | {r.metrics_scores.guidance_score} | {succ_attempt} | {prompt_t} | {trace.timings.get('total', 0.0):.1f} s | {overall_match_str} | {r.cache.hits} | {r.cache.misses} |\n")
             
