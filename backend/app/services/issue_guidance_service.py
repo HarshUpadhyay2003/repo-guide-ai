@@ -3,7 +3,7 @@ import logging
 import time
 import re
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
 
 from app.schema.issue_guidance import IssueGuidanceInput, IssueGuidanceOutput
@@ -12,6 +12,7 @@ from app.utils.file_ranking import score_file, get_candidate_files, infer_issue_
 from constants import ENABLE_PERF_DIAGNOSTICS
 from app.utils.performance_utils import estimate_tokens
 from app.utils.evidence_extractor import TechnicalEvidenceItem, extract_technical_evidence
+from app.utils.classification_reconciler import reconcile_issue_classification, ClassificationReconciliationResult
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +109,7 @@ class IssueEvidence:
     strength_counts: Dict[str, int] = field(default_factory=dict)
     top_technical_entities: List[str] = field(default_factory=list)
     technical_evidence_capture_status: str = "NOT_OBSERVED"
+    reconciliation_result: Optional[ClassificationReconciliationResult] = None
 
 @dataclass
 class RepositoryContext:
@@ -464,6 +466,21 @@ class IssueGuidanceService:
             evid.strength_counts = {}
             evid.top_technical_entities = []
             evid.technical_evidence_capture_status = "EXTRACTION_FAILED"
+            
+        # Stage 12.2.2 Classification Reconciliation with narrow safety fallback
+        try:
+            recon_res = reconcile_issue_classification(intel, evid)
+            evid.reconciliation_result = recon_res
+            # Override original intelligence values for downstream pipelines
+            intel.category = recon_res.resolved_category
+            intel.subsystem = recon_res.resolved_subsystem
+            logger.info("[IssueGuidance][Reconciliation] original=%s/%s resolved=%s/%s decision=%s score=%.1f",
+                        recon_res.original_category, recon_res.original_subsystem,
+                        recon_res.resolved_category, recon_res.resolved_subsystem,
+                        recon_res.decision, recon_res.confidence_score)
+        except Exception as exc:
+            logger.exception("Classification reconciliation failed: %s", exc)
+            evid.reconciliation_result = None
             
         return intel, evid
 

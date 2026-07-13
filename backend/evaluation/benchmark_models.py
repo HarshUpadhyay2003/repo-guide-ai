@@ -89,6 +89,21 @@ class TechnicalEvidenceCaptured(BaseModel):
     technical_evidence_extraction_ms: float = 0.0
     technical_evidence_capture_status: str = "NOT_OBSERVED"
 
+class ClassificationReconciliationCaptured(BaseModel):
+    original_category: str = ""
+    original_subsystem: str = ""
+    resolved_category: str = ""
+    resolved_subsystem: str = ""
+    decision: str = ""
+    confidence_score: float = 0.0
+    evidence_entities: List[str] = Field(default_factory=list)
+    conflicting_evidence_count: int = 0
+    supporting_evidence_count: int = 0
+    rationale: str = ""
+    additional_llm_calls_from_reconciliation: int = 0
+    classification_reconciliation_ms: float = 0.0
+    capture_status: str = "NOT_OBSERVED"
+
 class IssueGuidanceTrace(BaseModel):
     issue_number: int
     title: str = ""
@@ -108,6 +123,7 @@ class IssueGuidanceTrace(BaseModel):
     grounding_stats: Optional[GroundingValidationStats] = None
     timings: Dict[str, float] = Field(default_factory=dict)
     technical_evidence: Optional[TechnicalEvidenceCaptured] = None
+    classification_reconciliation: Optional[ClassificationReconciliationCaptured] = None
 
 class RoadmapCaptured(BaseModel):
     raw_json: Dict[str, Any] = Field(default_factory=dict)

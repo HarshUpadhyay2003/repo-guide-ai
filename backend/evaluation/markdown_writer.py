@@ -223,6 +223,24 @@ class MarkdownWriter:
                 else:
                     md.write("*No technical evidence captured.*\n\n")
 
+                # F. Stage 12.2.2 — Classification Reconciliation
+                recon_captured = getattr(trace, "classification_reconciliation", None)
+                md.write("#### Stage 12.2.2 — Classification Reconciliation\n\n")
+                if recon_captured and recon_captured.capture_status != "NOT_OBSERVED":
+                    md.write(f"- **Capture Status**: {recon_captured.capture_status}\n")
+                    md.write(f"- **Decision**: **{recon_captured.decision}**\n")
+                    md.write(f"- **Confidence Score**: {recon_captured.confidence_score:.1f}\n")
+                    md.write(f"- **Original Classification**: `{recon_captured.original_category}` (Subsystem: `{recon_captured.original_subsystem or 'None'}`)\n")
+                    md.write(f"- **Resolved Classification**: `{recon_captured.resolved_category}` (Subsystem: `{recon_captured.resolved_subsystem or 'None'}`)\n")
+                    md.write(f"- **Conflicting Evidence Items**: {recon_captured.conflicting_evidence_count}\n")
+                    md.write(f"- **Supporting Evidence Items**: {recon_captured.supporting_evidence_count}\n")
+                    md.write(f"- **Reconciliation Latency**: {recon_captured.classification_reconciliation_ms:.2f} ms\n")
+                    md.write(f"- **Additional LLM Calls**: {recon_captured.additional_llm_calls_from_reconciliation}\n")
+                    md.write(f"- **Rationale**: {recon_captured.rationale}\n")
+                    md.write(f"- **Entities involved**: {', '.join(recon_captured.evidence_entities) or 'None'}\n\n")
+                else:
+                    md.write("*No classification reconciliation telemetry captured.*\n\n")
+
                 # C. Repository Context
                 ctx = trace.repo_context
                 md.write("#### Repository Context\n")

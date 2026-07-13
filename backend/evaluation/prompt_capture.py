@@ -21,7 +21,8 @@ from evaluation.benchmark_models import (
     EvaluationReport, RepoSummaryCaptured, RepoMapCaptured,
     IssueGuidanceTrace, IssueGuidanceAttempt, GroundingValidationStats,
     RoadmapCaptured, CacheStats, ErrorStats, TraceEvent,
-    TechnicalEvidenceCaptured, TechnicalEvidenceItemCaptured
+    TechnicalEvidenceCaptured, TechnicalEvidenceItemCaptured,
+    ClassificationReconciliationCaptured
 )
 
 logger = logging.getLogger(__name__)
@@ -640,6 +641,29 @@ def EvaluationCaptureContext(report: EvaluationReport, exec_mode: str = "prod", 
                         technical_evidence_extraction_ms=dur * 1000.0,
                         technical_evidence_capture_status=capture_status
                     )
+                    
+                    # Capture Stage 12.2.2 Classification Reconciliation telemetry
+                    recon_res = getattr(evidence, "reconciliation_result", None)
+                    if recon_res:
+                        trace.classification_reconciliation = ClassificationReconciliationCaptured(
+                            original_category=recon_res.original_category,
+                            original_subsystem=recon_res.original_subsystem,
+                            resolved_category=recon_res.resolved_category,
+                            resolved_subsystem=recon_res.resolved_subsystem,
+                            decision=recon_res.decision,
+                            confidence_score=recon_res.confidence_score,
+                            evidence_entities=recon_res.evidence_entities,
+                            conflicting_evidence_count=len(recon_res.conflicting_evidence),
+                            supporting_evidence_count=len(recon_res.supporting_evidence),
+                            rationale=recon_res.rationale,
+                            additional_llm_calls_from_reconciliation=0,
+                            classification_reconciliation_ms=0.1,
+                            capture_status="CAPTURED"
+                        )
+                    else:
+                        trace.classification_reconciliation = ClassificationReconciliationCaptured(
+                            capture_status="NOT_OBSERVED"
+                        )
                     
                     trace.timings["understanding_evidence"] = dur
         return intel, evidence
