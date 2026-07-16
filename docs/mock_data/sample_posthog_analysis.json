@@ -1,0 +1,181 @@
+{
+  "success": true,
+  "execution_time_seconds": 29.902,
+  "data": {
+    "metadata": {
+      "name": "posthog",
+      "description": "🦔 PostHog is an all-in-one developer platform for building successful products. We offer product analytics, web analytics, session replay, error tracking, feature flags, experimentation, surveys, data warehouse, a CDP, and an AI product assistant to help debug your code, ship features faster, and keep all your usage and customer data in one stack.",
+      "stars": 34997,
+      "forks": 2843,
+      "language": "Python",
+      "topics": [
+        "analytics",
+        "python",
+        "react",
+        "javascript",
+        "typescript",
+        "ab-testing",
+        "experiments",
+        "feature-flags",
+        "session-replay",
+        "ai-analytics",
+        "cdp",
+        "data-warehouse",
+        "product-analytics",
+        "surveys",
+        "web-analytics"
+      ]
+    },
+    "summary": {
+      "repository_purpose": "PostHog is an open-source platform for product analytics, offering tools to track user behavior, analyze data, and improve products through features like session replays, feature flags, and error tracking.",
+      "target_users": "Developers, product managers, and teams building software who need analytics and user feedback tools without relying on third-party services.",
+      "difficulty_level": "Medium (requires basic knowledge of Docker for self-hosting, but cloud setup is beginner-friendly)",
+      "estimated_learning_time": "A few hours to explore core features; deeper integration may take longer",
+      "tech_stack": [
+        "Python",
+        "React",
+        "JavaScript",
+        "TypeScript",
+        "Docker"
+      ],
+      "key_concepts": [
+        "Product analytics",
+        "Session replays",
+        "Feature flags",
+        "Experimentation",
+        "Error tracking",
+        "Open-source self-hosting",
+        "Cloud deployment"
+      ],
+      "beginner_friendly_summary": "PostHog helps you understand how users interact with your product. It combines analytics, user session recordings, and feature management in one open-source platform. Use it to track events, test ideas, and fix issues—all while keeping data private.",
+      "first_steps": [
+        "Sign up for free at posthog.com/cloud to use PostHog Cloud",
+        "Run `curl` command to self-host a hobby instance with Docker",
+        "Install the JavaScript SDK in your website or app to start tracking events",
+        "Explore the docs to set up session replays or create feature flags"
+      ]
+    },
+    "repository_map": {
+      "frontend": [
+        "common/esbuilder",
+        "frontend",
+        "frontend/@posthog",
+        "frontend/__snapshots__",
+        "frontend/bin",
+        "frontend/plugins",
+        "frontend/public",
+        "frontend/src",
+        "livestream/tui",
+        "packages/quill",
+        "posthog/approvals",
+        "posthog/kafka_client",
+        "posthog/personhog_client",
+        "products/slack_app",
+        "products/streamlit_apps",
+        "products/web_analytics",
+        "services/stripe-app",
+        "tools/pr-approval-agent"
+      ],
+      "backend": [
+        "ee/api",
+        "ee/models"
+      ],
+      "tests": [],
+      "docs": [],
+      "config": [],
+      "scripts": [],
+      "other": []
+    },
+    "issues": [
+      {
+        "raw_issue": {
+          "number": 39135,
+          "title": "group flags that target groups should have default insights that only show `$feature_flag_called` events with groups associated with them",
+          "body": "right now, we create default insights for feature flags, but if a feature flag targets groups, we should tailor that default insight to only show `$feature_flag_called` events that have `groups` set on them, since otherwise these events don't really evaluation traffic to this flag (i.e. it can make the rollout percentages seem confusing since the amount of `false` events (just bc there are no groups) will be way larger than expected)\n\nFolks have been confused about this: https://posthog.slack.co",
+          "url": "https://github.com/PostHog/posthog/issues/39135",
+          "labels": [
+            "good first issue",
+            "team/feature-flags"
+          ],
+          "created_at": "2025-10-04T00:12:57+00:00"
+        },
+        "analysis": {
+          "difficulty": "Beginner",
+          "skills_required": [
+            "JavaScript/TypeScript",
+            "Event filtering logic",
+            "Understanding of feature flags"
+          ],
+          "affected_area": "Feature flag insights generation logic (likely in feature-flags module)",
+          "beginner_explanation": "This issue fixes analytics confusion for feature flags targeting user groups. Currently, insights show all events, but should only include events with group associations to accurately reflect flag rollout percentages.",
+          "confidence_score": 85
+        },
+        "exploration_hints": {
+          "affected_area": "Feature flag insights generation logic",
+          "likely_directories": [
+            "ee/api",
+            "ee/models"
+          ],
+          "possible_files": [
+            "feature_flags.py",
+            "insights.py",
+            "models.py",
+            "test_feature_flags.py"
+          ],
+          "reasoning": "Feature flag logic typically resides in backend API and models directories. Generation logic would involve both data processing (models) and API endpoints. Beginner issues often target specific files within these directories.",
+          "confidence": 85
+        }
+      },
+      {
+        "raw_issue": {
+          "number": 31267,
+          "title": "Embedded tab feedback button survey does not respect the position",
+          "body": "### Bug Description\n\nVery similar to https://github.com/PostHog/posthog/issues/29773\n\nThe fix will be closely the same - use the new \"next to button/tab\" position, and only make the survey next to the embedded tab if that's the selected value.\n\nHere's the current state:\n\n![Image](https://github.com/user-attachments/assets/4a08d2b7-74dd-4208-9572-9eb6fd5868bd)\n\n(Left is selected)\n\n![Image](https://github.com/user-attachments/assets/eb71ebaa-b966-4926-af38-ecaa8321471a)\n\nBut the survey is still sh",
+          "url": "https://github.com/PostHog/posthog/issues/31267",
+          "labels": [
+            "bug",
+            "feature/surveys",
+            "good first issue"
+          ],
+          "created_at": "2025-04-15T21:13:34+00:00"
+        },
+        "analysis": {
+          "difficulty": "Beginner",
+          "skills_required": [
+            "HTML",
+            "CSS",
+            "JavaScript",
+            "React"
+          ],
+          "affected_area": "Embedded tab feedback button positioning logic in the frontend UI",
+          "beginner_explanation": "The survey button is not appearing in the correct position next to the embedded tab. The fix involves adjusting the positioning logic to match the selected configuration.",
+          "confidence_score": 90
+        },
+        "exploration_hints": {
+          "affected_area": "Embedded tab feedback button positioning logic",
+          "likely_directories": [
+            "frontend/src/components",
+            "frontend/src/styles"
+          ],
+          "possible_files": [
+            "FeedbackButton.tsx",
+            "TabFeedback.tsx",
+            "FeedbackButton.css",
+            "TabStyles.css"
+          ],
+          "reasoning": "Positioning logic for UI elements like feedback buttons is typically handled in component files (e.g., .tsx) and their associated styling files. The frontend/src directory contains core components and styles, making these directories the most likely location for the affected code.",
+          "confidence": 90
+        }
+      }
+    ],
+    "roadmap": {
+      "best_issue_to_start": null,
+      "why_this_issue": "Roadmap disabled in FAST_MVP mode",
+      "recommended_learning_order": [],
+      "files_to_read_first": [],
+      "contribution_plan": [],
+      "success_tips": []
+    }
+  },
+  "error": null
+}

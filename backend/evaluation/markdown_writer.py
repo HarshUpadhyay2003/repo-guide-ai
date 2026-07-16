@@ -277,8 +277,55 @@ class MarkdownWriter:
                     else:
                         md.write("- *None*\n")
                     md.write("\n")
+                # Stage 12.2.4 — File Relationship Grounding
+                rel_captured = getattr(trace, "file_relationship_grounding", None)
+                md.write("#### Stage 12.2.4 — File Relationship Grounding\n\n")
+                if rel_captured and rel_captured.status != "NOT_OBSERVED":
+                    md.write(f"**Summary**:\n")
+                    md.write(f"- Status: {rel_captured.status}\n")
+                    md.write(f"- Total Candidates: {rel_captured.total_candidates}\n")
+                    md.write(f"- DIRECT: {rel_captured.direct_relationship_count} | STRONG: {rel_captured.strong_relationship_count} | MODERATE: {rel_captured.moderate_relationship_count} | WEAK: {rel_captured.weak_relationship_count}\n")
+                    md.write(f"- PRIMARY: {rel_captured.primary_count} | SECONDARY: {rel_captured.secondary_count} | SUPPORTING: {rel_captured.supporting_count} | LOW_CONFIDENCE: {rel_captured.low_confidence_count}\n")
+                    md.write(f"- Grounding Latency: {rel_captured.grounding_latency_ms:.2f} ms\n")
+                    md.write(f"- Additional LLM Calls: {rel_captured.additional_llm_calls}\n\n")
+                    
+                    md.write("**Explicit Path Resolution**:\n\n")
+                    md.write("| Evidence Ref | Explicit Path | Resolution | Match Type | Grounded Path(s) / Ambiguity | Rationale |\n")
+                    md.write("| --- | --- | --- | --- | --- | --- |\n")
+                    for res in rel_captured.explicit_path_resolutions:
+                        g_paths = ", ".join(f"`{p}`" for p in res.grounded_paths) or "None"
+                        m_type = res.match_type or "None"
+                        md.write(f"| {res.evidence_ref} | `{res.original_value}` | **{res.resolution_status}** | {m_type} | {g_paths} | {res.rationale} |\n")
+                    md.write("\n")
+                    
+                    md.write("**Candidate Relationship Table**:\n\n")
+                    md.write("| Order | File | Candidate Rank | Candidate Score | Direct Evidence | Entity Evidence | Structural Alignment | Ranking Support | Relationship Score | Strength | Priority | Relationship Types | Matched Entities | Evidence Types | Rationale |\n")
+                    md.write("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
+                    for idx, rel in enumerate(rel_captured.candidate_relationships):
+                        ents_str = ", ".join(f"`{e}`" for e in rel.matched_entities) or "None"
+                        ev_types = ", ".join(rel.matched_evidence_types) or "None"
+                        rel_types = ", ".join(rel.relationship_types) or "None"
+                        md.write(f"| {idx+1} | `{rel.path}` | {rel.candidate_rank} | {rel.candidate_score} | {rel.direct_evidence_score:.1f} | {rel.entity_evidence_score:.1f} | {rel.structural_alignment_score:.1f} | {rel.ranking_support_score:.1f} | {rel.relationship_score:.1f} | {rel.relationship_strength} | **{rel.investigation_priority}** | {rel_types} | {ents_str} | {ev_types} | {rel.rationale} |\n")
+                    md.write("\n")
+                    
+                    md.write("**Candidate-to-Candidate Relationships**:\n\n")
+                    md.write("| Source | Target | Relationship Types | Shared Entities | Shared Evidence | Shared Parent | Score | Rationale |\n")
+                    md.write("| --- | --- | --- | --- | --- | --- | --- | --- |\n")
+                    for edge in rel_captured.file_relationship_edges:
+                        ents = ", ".join(f"`{e}`" for e in edge.shared_entities) or "None"
+                        md.write(f"| `{edge.source_path}` | `{edge.target_path}` | {', '.join(edge.relationship_types)} | {ents} | {edge.shared_evidence_count} | `{edge.shared_parent_path or 'None'}` | {edge.relationship_score:.1f} | {edge.rationale} |\n")
+                    md.write("\n")
+                    
+                    md.write("**Investigation Order**:\n\n")
+                    for idx, path in enumerate(rel_captured.investigation_order):
+                        md.write(f"{idx+1}. `{path}`\n")
+                    md.write("\n")
+                    
+                    has_primary = any(r.investigation_priority == "PRIMARY" for r in rel_captured.candidate_relationships)
+                    if not has_primary:
+                        md.write("No PRIMARY investigation target was produced because available evidence did not satisfy the grounding threshold.\n\n")
                 else:
-                    md.write("*No context budgeting telemetry captured.*\n\n")
+                    md.write("*No file relationship grounding telemetry captured.*\n\n")
 
                 # C. Repository Context
                 ctx = trace.repo_context

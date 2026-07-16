@@ -1,6 +1,8 @@
 import re
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any, Tuple
+from app.utils.technical_entity_utils import tokenize_string
+
 
 # Configuration Constants
 MIN_OVERRIDE_MARGIN = 30
@@ -251,33 +253,114 @@ def reconcile_issue_classification(
     # 5. Resolve Subsystem separately
     resolved_subsystem = orig_sub
     
-    # Subsystem resolution flags
-    has_tools_signals = False
-    has_client_signals = False
-    has_ui_signals = False
-    has_test_signals = False
+    subsystem_scores = {
+        "core/tools": 0.0,
+        "integration/client": 0.0,
+        "ui/component": 0.0,
+        "tests": 0.0
+    }
     
-    for item in high_authority_items:
+    # Map strengths to authority weight bound to each evidence item
+    EVIDENCE_WEIGHTS = {
+        "CRITICAL": 1.00,
+        "STRONG": 0.80,
+        "SUPPORTING": 0.50,
+        "WEAK": 0.20,
+        "IGNORE": 0.00
+    }
+    
+    for item in high_authority_items + supporting_items:
+        weight = EVIDENCE_WEIGHTS.get(item.strength, 0.0)
+        if weight <= 0.0:
+            continue
+            
         text_lower = item.text.lower()
         entities_lower = [e.lower() for e in item.technical_entities]
         
-        if any(x in text_lower or x in entities_lower for x in ["basetool.run", "structuredtool._run", "runnableconfig", "basetool", "structuredtool"]):
-            has_tools_signals = True
-        if any(x in text_lower or x in entities_lower for x in ["azurechatopenai", "httpx", "client instantiation"]):
-            has_client_signals = True
-        if any(x in text_lower or x in entities_lower for x in ["react", "component", "render"]):
-            has_ui_signals = True
-        if any(x in text_lower or x in entities_lower for x in ["pytest", "fixture"]):
-            has_test_signals = True
+        # Extract path if evidence item has a path
+        path_lower = ""
+        if item.evidence_type == "EXPLICIT_PATH":
+            path_lower = item.normalized_value.lower()
             
-    if has_tools_signals:
-        resolved_subsystem = "core/tools"
-    elif has_client_signals:
-        resolved_subsystem = "integration/client"
-    elif has_ui_signals:
-        resolved_subsystem = "ui/component"
-    elif has_test_signals:
-        resolved_subsystem = "tests"
+        # Decompose entities into identifier tokens using the shared primitives
+        all_entity_tokens = []
+        for ent in item.technical_entities:
+            all_entity_tokens.extend(tokenize_string(ent))
+        all_entity_tokens = list(set(all_entity_tokens))
+        
+        # A. core/tools subsystem score contributions
+        # Compound signal 1: Entity contains tool/runnable semantics AND other tool/technical keywords
+        has_tool_entity = False
+        for ent in item.technical_entities:
+            ent_lower = ent.lower()
+            if any(sub in ent_lower for sub in ["tool", "runnable"]):
+                has_tool_entity = True
+                break
+        if has_tool_entity:
+            if any(x in text_lower or any(x in ent for ent in entities_lower) for x in ["run", "execute", "call", "core", "config", "invoke", "override", "subclass", "implement"]):
+                subsystem_scores["core/tools"] += 2.0 * weight
+                
+        # Compound signal 2: Explicit path containing tools/tool directory component AND tools semantics
+        if path_lower and ("/tools/" in path_lower or "/tool/" in path_lower or path_lower.startswith(("tools/", "tool/"))):
+            if any("tool" in x or "runnable" in x or "base" in x or "structured" in x for x in entities_lower + [text_lower]):
+                subsystem_scores["core/tools"] += 2.0 * weight
+
+        # B. integration/client subsystem score contributions
+        # Compound signal 1: Entity contains client/transport/vendor semantics AND HTTP/api/network keywords
+        has_client_entity = False
+        for ent in item.technical_entities:
+            ent_lower = ent.lower()
+            if any(sub in ent_lower for sub in ["client", "session", "connection", "transport", "httpx", "openai", "azure", "anthropic"]):
+                has_client_entity = True
+                break
+        if has_client_entity:
+            if any(x in text_lower or any(x in ent for ent in entities_lower) for x in ["http", "api", "url", "request", "response", "header", "auth", "get", "post", "query", "class", "method"]):
+                subsystem_scores["integration/client"] += 2.0 * weight
+                
+        # Compound signal 2: Explicit path contains client/integration-like directory AND client/http/request evidence
+        if path_lower and ("/client/" in path_lower or "/clients/" in path_lower or "/integration/" in path_lower or "/integrations/" in path_lower or "/partners/" in path_lower or path_lower.startswith(("client/", "clients/", "integration/", "integrations/", "partners/"))):
+            if any("client" in x or "session" in x or "connection" in x or "api" in x or "http" in x or "request" in x for x in entities_lower + [text_lower]):
+                subsystem_scores["integration/client"] += 2.0 * weight
+
+        # C. ui/component subsystem score contributions
+        # Compound signal 1: Entity contains UI component/view semantics AND UI keywords
+        has_ui_entity = False
+        for ent in item.technical_entities:
+            ent_lower = ent.lower()
+            if any(sub in ent_lower for sub in ["component", "button", "panel", "view", "page", "widget", "ui"]):
+                has_ui_entity = True
+                break
+        if has_ui_entity:
+            if any(x in text_lower or any(x in ent for ent in entities_lower) for x in ["react", "jsx", "tsx", "render", "style", "css", "html", "dom", "click", "state"]):
+                subsystem_scores["ui/component"] += 2.0 * weight
+                
+        # Compound signal 2: Explicit path contains UI-like directory AND UI semantics
+        if path_lower and ("/components/" in path_lower or "/views/" in path_lower or "/pages/" in path_lower or "/ui/" in path_lower or path_lower.startswith(("components/", "views/", "pages/", "ui/"))):
+            if any("component" in x or "view" in x or "ui" in x or "style" in x or "render" in x for x in entities_lower + [text_lower]):
+                subsystem_scores["ui/component"] += 2.0 * weight
+
+        # D. tests subsystem score contributions
+        # Compound signal 1: Explicit test path
+        if path_lower and ("/tests/" in path_lower or "/test/" in path_lower or "test_" in path_lower or "_test" in path_lower or path_lower.startswith(("tests/", "test/"))):
+            subsystem_scores["tests"] += 2.0 * weight
+            
+        # Compound signal 2: Entity contains test/spec/mock/fixture semantics AND reproduction/failure/assertion evidence
+        if any(t in ["test", "spec", "mock", "fixture"] for t in all_entity_tokens):
+            if any(x in text_lower for x in ["assert", "fail", "error", "pytest", "unittest", "run", "reproduce"]):
+                subsystem_scores["tests"] += 2.0 * weight
+                
+    # Confidence and Margin Override Decision
+    sorted_subs = sorted(subsystem_scores.items(), key=lambda val: val[1], reverse=True)
+    best_subsystem, best_score = sorted_subs[0]
+    second_subsystem, second_score = sorted_subs[1]
+    
+    margin = best_score - second_score
+    if best_score >= 1.5 and margin >= 0.8:
+        resolved_subsystem = best_subsystem
+    else:
+        resolved_subsystem = orig_sub
+
+
         
     # Build rationale statement
     if decision == "OVERRIDDEN":

@@ -1,0 +1,597 @@
+{
+  "environment": {
+    "groq_api_key_exists": true,
+    "groq_api_key_length": 56,
+    "groq_api_key_prefix": "gsk_Kx8k",
+    "model_name_exists": true,
+    "model_name_value": "qwen/qwen3.6-27b",
+    "sdk_version": "1.4.0",
+    "python_version": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:37:03) [MSC v.1929 64 bit (AMD64)]"
+  },
+  "available_models": [
+    {
+      "id": "qwen/qwen3.6-27b",
+      "owned_by": "Alibaba Cloud",
+      "created": 1778288776,
+      "context_window": 131072
+    },
+    {
+      "id": "allam-2-7b",
+      "owned_by": "SDAIA",
+      "created": 1737672203,
+      "context_window": 4096
+    },
+    {
+      "id": "whisper-large-v3",
+      "owned_by": "OpenAI",
+      "created": 1693721698,
+      "context_window": 448
+    },
+    {
+      "id": "whisper-large-v3-turbo",
+      "owned_by": "OpenAI",
+      "created": 1728413088,
+      "context_window": 448
+    },
+    {
+      "id": "openai/gpt-oss-safeguard-20b",
+      "owned_by": "OpenAI",
+      "created": 1761708789,
+      "context_window": 131072
+    },
+    {
+      "id": "meta-llama/llama-prompt-guard-2-86m",
+      "owned_by": "Meta",
+      "created": 1748632165,
+      "context_window": 512
+    },
+    {
+      "id": "qwen/qwen3-32b",
+      "owned_by": "Alibaba Cloud",
+      "created": 1748396646,
+      "context_window": 131072
+    },
+    {
+      "id": "canopylabs/orpheus-arabic-saudi",
+      "owned_by": "Canopy Labs",
+      "created": 1765926439,
+      "context_window": 4000
+    },
+    {
+      "id": "groq/compound",
+      "owned_by": "Groq",
+      "created": 1756949530,
+      "context_window": 131072
+    },
+    {
+      "id": "meta-llama/llama-prompt-guard-2-22m",
+      "owned_by": "Meta",
+      "created": 1748632101,
+      "context_window": 512
+    },
+    {
+      "id": "openai/gpt-oss-120b",
+      "owned_by": "OpenAI",
+      "created": 1754408224,
+      "context_window": 131072
+    },
+    {
+      "id": "llama-3.1-8b-instant",
+      "owned_by": "Meta",
+      "created": 1693721698,
+      "context_window": 131072
+    },
+    {
+      "id": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "owned_by": "Meta",
+      "created": 1743874824,
+      "context_window": 131072
+    },
+    {
+      "id": "llama-3.3-70b-versatile",
+      "owned_by": "Meta",
+      "created": 1733447754,
+      "context_window": 131072
+    },
+    {
+      "id": "groq/compound-mini",
+      "owned_by": "Groq",
+      "created": 1756949707,
+      "context_window": 131072
+    },
+    {
+      "id": "openai/gpt-oss-20b",
+      "owned_by": "OpenAI",
+      "created": 1754407957,
+      "context_window": 131072
+    },
+    {
+      "id": "canopylabs/orpheus-v1-english",
+      "owned_by": "Canopy Labs",
+      "created": 1766186316,
+      "context_window": 4000
+    }
+  ],
+  "model_results": [
+    {
+      "model": "openai/gpt-oss-20b",
+      "available": true,
+      "overall_score": 4.9,
+      "json_test": {
+        "success": false,
+        "latency": 0.13169002532958984,
+        "connection_time": null,
+        "generation_time": null,
+        "total_time": 0.13169002532958984,
+        "error_type": "invalid_request_error",
+        "http_status": "400",
+        "groq_code": "json_validate_failed",
+        "groq_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+        "returned_content": "N/A",
+        "failure_category": "Invalid Request",
+        "exception_detail": {
+          "status_code": 400,
+          "response": "<Response [400 Bad Request]>",
+          "body": {
+            "error": {
+              "message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+              "type": "invalid_request_error",
+              "code": "json_validate_failed",
+              "failed_generation": ""
+            }
+          },
+          "error_type": "invalid_request_error",
+          "error_code": "json_validate_failed",
+          "error_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+          "headers": {
+            "date": "Sat, 27 Jun 2026 05:47:12 GMT",
+            "content-type": "application/json",
+            "content-length": "202",
+            "connection": "keep-alive",
+            "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+            "server": "cloudflare",
+            "vary": "Origin",
+            "x-groq-region": "bom",
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-requests": "999",
+            "x-ratelimit-remaining-tokens": "7842",
+            "x-ratelimit-reset-requests": "1m26.4s",
+            "x-ratelimit-reset-tokens": "1.185s",
+            "x-request-id": "req_01kw3sw94je9a87qy9rr1h33hr",
+            "strict-transport-security": "max-age=15552000",
+            "via": "1.1 google",
+            "cf-cache-status": "DYNAMIC",
+            "cf-ray": "a12227da19f9a710-DEL",
+            "alt-svc": "h3=\":443\"; ma=86400"
+          }
+        }
+      },
+      "plain_completion_test": {
+        "success": true,
+        "latency": 0.4019968509674072,
+        "connection_time": 0.38770029596740724,
+        "generation_time": 0.010055558,
+        "total_time": 0.4019968509674072,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "latency_breakdown": {
+        "json_test": {
+          "connection_time": null,
+          "generation_time": null,
+          "total_time": 0.13169002532958984
+        },
+        "plain_completion_test": {
+          "connection_time": 0.38770029596740724,
+          "generation_time": 0.010055558,
+          "total_time": 0.4019968509674072
+        }
+      },
+      "json_validation": {
+        "valid": false,
+        "returned_characters": 0,
+        "returned_tokens_estimated": 0,
+        "json_size_bytes": 0,
+        "fields_returned": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "available": true,
+      "overall_score": 4.9,
+      "json_test": {
+        "success": false,
+        "latency": 0.41739797592163086,
+        "connection_time": null,
+        "generation_time": null,
+        "total_time": 0.41739797592163086,
+        "error_type": "invalid_request_error",
+        "http_status": "400",
+        "groq_code": "json_validate_failed",
+        "groq_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+        "returned_content": "N/A",
+        "failure_category": "Invalid Request",
+        "exception_detail": {
+          "status_code": 400,
+          "response": "<Response [400 Bad Request]>",
+          "body": {
+            "error": {
+              "message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+              "type": "invalid_request_error",
+              "code": "json_validate_failed",
+              "failed_generation": ""
+            }
+          },
+          "error_type": "invalid_request_error",
+          "error_code": "json_validate_failed",
+          "error_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+          "headers": {
+            "date": "Sat, 27 Jun 2026 05:47:13 GMT",
+            "content-type": "application/json",
+            "content-length": "202",
+            "connection": "keep-alive",
+            "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+            "server": "cloudflare",
+            "vary": "Origin",
+            "x-groq-region": "bom",
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-requests": "999",
+            "x-ratelimit-remaining-tokens": "7842",
+            "x-ratelimit-reset-requests": "1m26.4s",
+            "x-ratelimit-reset-tokens": "1.185s",
+            "x-request-id": "req_01kw3sw9ncf6dsaq1b81pzmwka",
+            "strict-transport-security": "max-age=15552000",
+            "via": "1.1 google",
+            "cf-cache-status": "DYNAMIC",
+            "cf-ray": "a12227dd7d59a710-DEL",
+            "alt-svc": "h3=\":443\"; ma=86400"
+          }
+        }
+      },
+      "plain_completion_test": {
+        "success": true,
+        "latency": 0.36779284477233887,
+        "connection_time": 0.34360605077233886,
+        "generation_time": 0.020852284,
+        "total_time": 0.36779284477233887,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "latency_breakdown": {
+        "json_test": {
+          "connection_time": null,
+          "generation_time": null,
+          "total_time": 0.41739797592163086
+        },
+        "plain_completion_test": {
+          "connection_time": 0.34360605077233886,
+          "generation_time": 0.020852284,
+          "total_time": 0.36779284477233887
+        }
+      },
+      "json_validation": {
+        "valid": false,
+        "returned_characters": 0,
+        "returned_tokens_estimated": 0,
+        "json_size_bytes": 0,
+        "fields_returned": []
+      }
+    },
+    {
+      "model": "qwen/qwen3-32b",
+      "available": true,
+      "overall_score": 5.0,
+      "json_test": {
+        "success": false,
+        "latency": 0.1292121410369873,
+        "connection_time": null,
+        "generation_time": null,
+        "total_time": 0.1292121410369873,
+        "error_type": "invalid_request_error",
+        "http_status": "400",
+        "groq_code": "json_validate_failed",
+        "groq_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+        "returned_content": "N/A",
+        "failure_category": "Invalid Request",
+        "exception_detail": {
+          "status_code": 400,
+          "response": "<Response [400 Bad Request]>",
+          "body": {
+            "error": {
+              "message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+              "type": "invalid_request_error",
+              "code": "json_validate_failed",
+              "failed_generation": ""
+            }
+          },
+          "error_type": "invalid_request_error",
+          "error_code": "json_validate_failed",
+          "error_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+          "headers": {
+            "date": "Sat, 27 Jun 2026 05:47:13 GMT",
+            "content-type": "application/json",
+            "content-length": "202",
+            "connection": "keep-alive",
+            "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+            "server": "cloudflare",
+            "vary": "Origin",
+            "x-groq-region": "bom",
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-limit-tokens": "6000",
+            "x-ratelimit-remaining-requests": "999",
+            "x-ratelimit-remaining-tokens": "5927",
+            "x-ratelimit-reset-requests": "1m26.4s",
+            "x-ratelimit-reset-tokens": "730ms",
+            "x-request-id": "req_01kw3swadze9es5qqrmhgxanqd",
+            "strict-transport-security": "max-age=15552000",
+            "via": "1.1 google",
+            "cf-cache-status": "DYNAMIC",
+            "cf-ray": "a12227e26aa6a710-DEL",
+            "alt-svc": "h3=\":443\"; ma=86400"
+          }
+        }
+      },
+      "plain_completion_test": {
+        "success": true,
+        "latency": 0.13116765022277832,
+        "connection_time": 0.11330854922277832,
+        "generation_time": 0.01728334,
+        "total_time": 0.13116765022277832,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "<think>\nOkay, the user wants me to reply",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "latency_breakdown": {
+        "json_test": {
+          "connection_time": null,
+          "generation_time": null,
+          "total_time": 0.1292121410369873
+        },
+        "plain_completion_test": {
+          "connection_time": 0.11330854922277832,
+          "generation_time": 0.01728334,
+          "total_time": 0.13116765022277832
+        }
+      },
+      "json_validation": {
+        "valid": false,
+        "returned_characters": 0,
+        "returned_tokens_estimated": 0,
+        "json_size_bytes": 0,
+        "fields_returned": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.6-27b",
+      "available": true,
+      "overall_score": 5.0,
+      "json_test": {
+        "success": false,
+        "latency": 0.13295459747314453,
+        "connection_time": null,
+        "generation_time": null,
+        "total_time": 0.13295459747314453,
+        "error_type": "invalid_request_error",
+        "http_status": "400",
+        "groq_code": "json_validate_failed",
+        "groq_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+        "returned_content": "N/A",
+        "failure_category": "Invalid Request",
+        "exception_detail": {
+          "status_code": 400,
+          "response": "<Response [400 Bad Request]>",
+          "body": {
+            "error": {
+              "message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+              "type": "invalid_request_error",
+              "code": "json_validate_failed",
+              "failed_generation": ""
+            }
+          },
+          "error_type": "invalid_request_error",
+          "error_code": "json_validate_failed",
+          "error_message": "Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+          "headers": {
+            "date": "Sat, 27 Jun 2026 05:47:14 GMT",
+            "content-type": "application/json",
+            "content-length": "202",
+            "connection": "keep-alive",
+            "cache-control": "private, max-age=0, no-store, no-cache, must-revalidate",
+            "server": "cloudflare",
+            "vary": "Origin",
+            "x-groq-region": "bom",
+            "x-ratelimit-limit-requests": "1000",
+            "x-ratelimit-limit-tokens": "8000",
+            "x-ratelimit-remaining-requests": "999",
+            "x-ratelimit-remaining-tokens": "7916",
+            "x-ratelimit-reset-requests": "1m26.4s",
+            "x-ratelimit-reset-tokens": "630ms",
+            "x-request-id": "req_01kw3swap9ehtvagcppya5ge3t",
+            "strict-transport-security": "max-age=15552000",
+            "via": "1.1 google",
+            "cf-cache-status": "DYNAMIC",
+            "cf-ray": "a12227e41c57a710-DEL",
+            "alt-svc": "h3=\":443\"; ma=86400"
+          }
+        }
+      },
+      "plain_completion_test": {
+        "success": true,
+        "latency": 0.13004803657531738,
+        "connection_time": 0.10982566857531738,
+        "generation_time": 0.019358827,
+        "total_time": 0.13004803657531738,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "\n<think>\nHere's a thinking process:\n\n1. ",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "latency_breakdown": {
+        "json_test": {
+          "connection_time": null,
+          "generation_time": null,
+          "total_time": 0.13295459747314453
+        },
+        "plain_completion_test": {
+          "connection_time": 0.10982566857531738,
+          "generation_time": 0.019358827,
+          "total_time": 0.13004803657531738
+        }
+      },
+      "json_validation": {
+        "valid": false,
+        "returned_characters": 0,
+        "returned_tokens_estimated": 0,
+        "json_size_bytes": 0,
+        "fields_returned": []
+      }
+    },
+    {
+      "model": "llama-3.3-70b-versatile",
+      "available": true,
+      "overall_score": 10.0,
+      "json_test": {
+        "success": true,
+        "latency": 0.14469432830810547,
+        "connection_time": 0.12359040530810547,
+        "generation_time": 0.009393096,
+        "total_time": 0.14469432830810547,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "{\n  \"status\": \"ok\"\n}",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "plain_completion_test": {
+        "success": true,
+        "latency": 0.12969088554382324,
+        "connection_time": 0.11630522154382324,
+        "generation_time": 0.007343612,
+        "total_time": 0.12969088554382324,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "OK",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "latency_breakdown": {
+        "json_test": {
+          "connection_time": 0.12359040530810547,
+          "generation_time": 0.009393096,
+          "total_time": 0.14469432830810547
+        },
+        "plain_completion_test": {
+          "connection_time": 0.11630522154382324,
+          "generation_time": 0.007343612,
+          "total_time": 0.12969088554382324
+        }
+      },
+      "json_validation": {
+        "valid": true,
+        "returned_characters": 20,
+        "returned_tokens_estimated": 9,
+        "json_size_bytes": 20,
+        "fields_returned": [
+          "status"
+        ]
+      }
+    },
+    {
+      "model": "llama-3.1-8b-instant",
+      "available": true,
+      "overall_score": 10.0,
+      "json_test": {
+        "success": true,
+        "latency": 0.11624264717102051,
+        "connection_time": 0.1039544841710205,
+        "generation_time": 0.006294885,
+        "total_time": 0.11624264717102051,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "{\n  \"status\": \"ok\"\n}",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "plain_completion_test": {
+        "success": true,
+        "latency": 0.11237049102783203,
+        "connection_time": 0.10561676102783203,
+        "generation_time": 0.004387885,
+        "total_time": 0.11237049102783203,
+        "error_type": "N/A",
+        "http_status": "N/A",
+        "groq_code": "N/A",
+        "groq_message": "N/A",
+        "returned_content": "OK",
+        "failure_category": "N/A",
+        "exception_detail": null
+      },
+      "latency_breakdown": {
+        "json_test": {
+          "connection_time": 0.1039544841710205,
+          "generation_time": 0.006294885,
+          "total_time": 0.11624264717102051
+        },
+        "plain_completion_test": {
+          "connection_time": 0.10561676102783203,
+          "generation_time": 0.004387885,
+          "total_time": 0.11237049102783203
+        }
+      },
+      "json_validation": {
+        "valid": true,
+        "returned_characters": 20,
+        "returned_tokens_estimated": 9,
+        "json_size_bytes": 20,
+        "fields_returned": [
+          "status"
+        ]
+      }
+    }
+  ],
+  "recommendations": {
+    "model_visible": "YES",
+    "can_generate": "PARTIAL (Plain text only, JSON mode failed)",
+    "reason": "json_validate_failed",
+    "likely_cause": "Invalid parameters passed to the model endpoint. Detail: Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.",
+    "confidence": "85%",
+    "ranked_models": [
+      "llama-3.1-8b-instant",
+      "llama-3.3-70b-versatile",
+      "qwen/qwen3-32b",
+      "qwen/qwen3.6-27b",
+      "openai/gpt-oss-20b",
+      "openai/gpt-oss-120b"
+    ],
+    "recommended_production_model": "llama-3.3-70b-versatile",
+    "recommended_reason": "The model llama-3.3-70b-versatile passed both plain completion and JSON mode tests with a high score of 10.0/10. It returned perfectly formatted JSON and demonstrated low latency.",
+    "recommended_strengths": "Excellent performance, highly reliable JSON generation support, widely supported, low latency.",
+    "recommended_weaknesses": "Rate limits on free tier can be restrictive.",
+    "recommended_confidence": "98%"
+  }
+}

@@ -527,6 +527,97 @@ def EvaluationCaptureContext(report: EvaluationReport, exec_mode: str = "prod", 
             report.roadmap.timing = dur
         return res
 
+    def _capture_relationship_grounding_telemetry(service_inst, issue_trace):
+        grounding = getattr(service_inst, "_last_relationship_grounding", None)
+        if grounding:
+            from evaluation.benchmark_models import (
+                FileRelationshipGroundingCaptured,
+                ExplicitPathResolutionCaptured,
+                CandidateFileRelationshipCaptured,
+                CandidateRelationshipEdgeCaptured
+            )
+            
+            resolutions = [
+                ExplicitPathResolutionCaptured(
+                    evidence_ref=r.evidence_ref,
+                    original_value=r.original_value,
+                    normalized_value=r.normalized_value,
+                    resolution_status=r.resolution_status,
+                    match_type=r.match_type,
+                    grounded_paths=r.grounded_paths,
+                    ambiguity_count=r.ambiguity_count,
+                    rationale=r.rationale
+                )
+                for r in grounding.explicit_path_resolutions
+            ]
+            
+            relationships = [
+                CandidateFileRelationshipCaptured(
+                    path=c.path,
+                    candidate_rank=c.candidate_rank,
+                    candidate_score=c.candidate_score,
+                    relationship_score=c.relationship_score,
+                    relationship_strength=c.relationship_strength,
+                    investigation_priority=c.investigation_priority,
+                    relationship_types=c.relationship_types,
+                    matched_evidence_refs=c.matched_evidence_refs,
+                    matched_evidence_types=c.matched_evidence_types,
+                    matched_evidence_strengths=c.matched_evidence_strengths,
+                    matched_entities=c.matched_entities,
+                    matched_explicit_paths=c.matched_explicit_paths,
+                    subsystem_alignment=c.subsystem_alignment,
+                    category_alignment=c.category_alignment,
+                    repository_map_alignment=c.repository_map_alignment,
+                    direct_evidence_score=c.direct_evidence_score,
+                    entity_evidence_score=c.entity_evidence_score,
+                    structural_alignment_score=c.structural_alignment_score,
+                    ranking_support_score=c.ranking_support_score,
+                    candidate_ranking_reasons=c.candidate_ranking_reasons,
+                    rationale=c.rationale
+                )
+                for c in grounding.candidate_relationships
+            ]
+            
+            edges = [
+                CandidateRelationshipEdgeCaptured(
+                    source_path=e.source_path,
+                    target_path=e.target_path,
+                    relationship_types=e.relationship_types,
+                    shared_entities=e.shared_entities,
+                    shared_evidence_count=e.shared_evidence_count,
+                    shared_parent_path=e.shared_parent_path,
+                    relationship_score=e.relationship_score,
+                    rationale=e.rationale
+                )
+                for e in grounding.file_relationship_edges
+            ]
+            
+            captured = FileRelationshipGroundingCaptured(
+                status=grounding.status,
+                explicit_path_resolutions=resolutions,
+                candidate_relationships=relationships,
+                file_relationship_edges=edges,
+                investigation_order=grounding.investigation_order,
+                total_candidates=grounding.total_candidates,
+                direct_relationship_count=grounding.direct_relationship_count,
+                strong_relationship_count=grounding.strong_relationship_count,
+                moderate_relationship_count=grounding.moderate_relationship_count,
+                weak_relationship_count=grounding.weak_relationship_count,
+                primary_count=grounding.primary_count,
+                secondary_count=grounding.secondary_count,
+                supporting_count=grounding.supporting_count,
+                low_confidence_count=grounding.low_confidence_count,
+                explicit_paths_available=grounding.explicit_paths_available,
+                explicit_paths_grounded=grounding.explicit_paths_grounded,
+                explicit_paths_ambiguous=grounding.explicit_paths_ambiguous,
+                explicit_paths_ungrounded=grounding.explicit_paths_ungrounded,
+                grounding_latency_ms=grounding.grounding_latency_ms,
+                additional_llm_calls=0
+            )
+            
+            with lock:
+                issue_trace.file_relationship_grounding = captured
+
     def _capture_budgeting_telemetry(service_inst, issue_trace):
         budget_ctx = getattr(service_inst, "_last_budgeted_context", None)
         if budget_ctx:
@@ -661,13 +752,15 @@ def EvaluationCaptureContext(report: EvaluationReport, exec_mode: str = "prod", 
                 
                 # Capture Stage 12.2.3 Context Budgeting telemetry
                 _capture_budgeting_telemetry(self, trace)
-
+                _capture_relationship_grounding_telemetry(self, trace)
+                
                 with lock:
                     trace.final_guidance_json = res
                     trace.timings["total"] = dur
                 return res
             except Exception as exc:
                 _capture_budgeting_telemetry(self, trace)
+                _capture_relationship_grounding_telemetry(self, trace)
                 with lock:
                     report.errors.validation_errors.append(f"Issue #{issue_number}: {exc}")
                 raise

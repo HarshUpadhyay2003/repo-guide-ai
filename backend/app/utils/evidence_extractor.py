@@ -213,7 +213,7 @@ def _extract_named_classes(text: str) -> List[str]:
 def _extract_named_functions(text: str) -> List[str]:
     """Extract functions, Class.method, private method notations."""
     funcs = []
-    # 1. Class.method or object.method (e.g. BaseTool.run)
+    # 1. Class.method or object.method (e.g. MyClass.my_method)
     method_matches = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\b', text)
     for m in method_matches:
         if not m.endswith(('.py', '.js', '.ts', '.tsx', '.json', '.yml', '.yaml', '.md', '.css', '.html', '.sh', '.go', '.rs', '.java', '.h', '.c', '.cpp', '.cs')):

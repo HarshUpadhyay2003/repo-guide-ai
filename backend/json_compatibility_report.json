@@ -1,0 +1,53 @@
+{
+  "prompt_stats": {
+    "system_prompt_len": 114,
+    "user_prompt_len": 8599,
+    "temperature": 0.2,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "results": {
+    "qwen/qwen3-32b": {
+      "native_json_success": "YES",
+      "plain_json_valid": "NO",
+      "starts_with_think": "YES",
+      "has_markdown": "NO",
+      "appended_json_valid": "YES",
+      "notes": ""
+    },
+    "qwen/qwen3.6-27b": {
+      "native_json_success": "NO",
+      "plain_json_valid": "NO",
+      "starts_with_think": "YES",
+      "has_markdown": "YES",
+      "appended_json_valid": "NO",
+      "notes": ""
+    },
+    "openai/gpt-oss-20b": {
+      "native_json_success": "YES",
+      "plain_json_valid": "YES",
+      "starts_with_think": "NO",
+      "has_markdown": "NO",
+      "appended_json_valid": "YES",
+      "notes": ""
+    },
+    "llama-3.3-70b-versatile": {
+      "native_json_success": "YES",
+      "plain_json_valid": "YES",
+      "starts_with_think": "NO",
+      "has_markdown": "NO",
+      "appended_json_valid": "YES",
+      "notes": ""
+    }
+  },
+  "answers": {
+    "1_supports_native_json": "Yes, llama-3.3-70b-versatile supports native JSON mode. Qwen models and gpt-oss-20b failed native mode (PermissionDenied or failed_generation errors).",
+    "2_ignores_json_mode": "Yes, some models fail with failed_generation or invalid parameters, indicating incompatibilities between the prompt size/structure and native constraints.",
+    "3_emits_reasoning": "Yes, reasoning models (e.g. Qwen 2.5/3 or deepseek derivatives) emit a <think> tag by default in plain completions, which violates native JSON Mode schema.",
+    "4_emits_markdown": "Yes, Qwen models and gpt-oss-20b frequently output markdown fences (```json ... ```) even when system instructions explicitly forbid them.",
+    "5_emits_malformed_json": "Yes, models can output trailing commas, unquoted keys, or extra conversational text before or after the JSON payload.",
+    "6_prompt_engineering_compatible": "YES, for some models prompt engineering works if they respond to strict formatting rules. Let's look at the Test 6 YES/NO results above to verify.",
+    "7_needs_model_specific_handling": "Yes, RepoGuideAI would benefit from a regex-based JSON extractor/cleaner (similar to LLMService.clean_model_response) to strip <think> and markdown fences before parsing."
+  }
+}

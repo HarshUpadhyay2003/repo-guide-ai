@@ -567,7 +567,8 @@ def budget_and_assemble_prompt(
     comments: List[Dict[str, Any]],
     instructions_text: str,
     json_schema_text: str,
-    budget_limit: int = 1500
+    budget_limit: int = 1500,
+    relationship_grounding: Optional[Any] = None
 ) -> Tuple[str, BudgetedPromptContext]:
     start_time = os.times().elapsed if hasattr(os, "times") else 0.0
     
@@ -687,16 +688,57 @@ def budget_and_assemble_prompt(
         mode_conf = attempt_modes[attempt]
         
         # Build Candidate Files block
-        sel_cands = candidates[:mode_conf["max_candidates"]]
         candidate_lines = []
-        for c in sel_cands:
-            reasons = compact_ranking_reasons(c.get("explanation", ""), mode_conf["max_reasons"])
-            reason_text = " ".join(f"- {r}" for r in reasons)
-            candidate_lines.append(f"- File: '{c['path']}' (Score: {c['score']}) Reason: {reason_text}")
+        sel_cands_paths = []
+        if relationship_grounding and relationship_grounding.status == "SUCCESS":
+            top_relationships = relationship_grounding.candidate_relationships[:mode_conf["max_candidates"]]
+            if attempt == 1:
+                max_rel_types = 2
+                max_ents = 3
+                max_rat_len = 100
+            elif attempt == 2:
+                max_rel_types = 2
+                max_ents = 2
+                max_rat_len = 80
+            elif attempt == 3:
+                max_rel_types = 2
+                max_ents = 2
+                max_rat_len = 70
+            else: # Attempt 4
+                max_rel_types = 1
+                max_ents = 1
+                max_rat_len = 60
+                
+            for rel in top_relationships:
+                sel_cands_paths.append(rel.path)
+                rel_types = rel.relationship_types[:max_rel_types]
+                rel_types_str = ", ".join(rel_types) if rel_types else "None"
+                ents = rel.matched_entities[:max_ents]
+                ents_str = ", ".join(ents) if ents else "None"
+                rat = rel.rationale
+                if len(rat) > max_rat_len:
+                    rat = rat[:max_rat_len].strip() + "..."
+                    
+                line = (
+                    f"- File: '{rel.path}'\n"
+                    f"  Priority: {rel.investigation_priority}\n"
+                    f"  Relationship: {rel.relationship_strength}\n"
+                    f"  Signals: {rel_types_str}\n"
+                    f"  Entities: {ents_str}\n"
+                    f"  Reason: {rat}"
+                )
+                candidate_lines.append(line)
+        else:
+            sel_cands = candidates[:mode_conf["max_candidates"]]
+            for c in sel_cands:
+                sel_cands_paths.append(c["path"])
+                reasons = compact_ranking_reasons(c.get("explanation", ""), mode_conf["max_reasons"])
+                reason_text = " ".join(f"- {r}" for r in reasons)
+                candidate_lines.append(f"- File: '{c['path']}' (Score: {c['score']}) Reason: {reason_text}")
             
         candidate_files_block = ""
         if candidate_lines:
-            candidate_dirs = sorted(list(set(os.path.dirname(f) for f in [c["path"] for c in sel_cands] if os.path.dirname(f))))
+            candidate_dirs = sorted(list(set(os.path.dirname(f) for f in sel_cands_paths if os.path.dirname(f))))
             candidate_files_block = (
                 f"TOP CANDIDATE FILES:\n"
                 f"Candidate Directories:\n{json.dumps(candidate_dirs, ensure_ascii=False)}\n\n"
@@ -877,7 +919,7 @@ def budget_and_assemble_prompt(
                 estimated_tokens=prompt_tokens,
                 budget_limit=budget_limit,
                 protected_evidence_count=len(critical_evidence) + len(strong_evidence),
-                candidate_file_count=len(sel_cands),
+                candidate_file_count=len(sel_cands_paths),
                 explicit_path_count=len(explicit_paths),
                 budget_status="SUCCESS",
                 selected_attempt=attempt,
@@ -885,8 +927,8 @@ def budget_and_assemble_prompt(
                 static_template_tokens=static_template_tokens,
                 dynamic_context_tokens=prompt_tokens - static_template_tokens,
                 candidate_files_available_count=candidate_files_available_count,
-                candidate_files_included_count=len([c for c in sel_cands if c["path"] in prompt]),
-                candidate_files_included=[c["path"] for c in sel_cands if c["path"] in prompt],
+                candidate_files_included_count=len([p for p in sel_cands_paths if p in prompt]),
+                candidate_files_included=[p for p in sel_cands_paths if p in prompt],
                 critical_evidence_included_count=len([x for x in critical_evidence if (x.normalized_value and x.normalized_value in prompt) or (x.text and x.text in prompt) or any(e in prompt for e in x.technical_entities)]),
                 strong_evidence_included_count=len([x for x in strong_evidence if (x.normalized_value and x.normalized_value in prompt) or (x.text and x.text in prompt) or any(e in prompt for e in x.technical_entities)]),
                 explicit_paths_included_count=len([ep for ep in explicit_paths if ep in prompt]),

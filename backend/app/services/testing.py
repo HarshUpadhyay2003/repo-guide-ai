@@ -28,7 +28,7 @@ class TestRepoRequest(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {"repo_url": "https://github.com/langchain-ai/langchain"}
+            "example": {"repo_url": "https://github.com/owner/repository"}
         }
     )
 
@@ -40,7 +40,7 @@ class TestIssueRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "repo_url": "https://github.com/langchain-ai/langchain",
+                "repo_url": "https://github.com/owner/repository",
                 "issue_number": 12345
             }
         }

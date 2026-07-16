@@ -135,6 +135,71 @@ class ContextBudgetingCaptured(BaseModel):
     explicit_paths_available_count: int = 0
     all_attempt_prompts: Dict[int, str] = Field(default_factory=dict)
 
+class ExplicitPathResolutionCaptured(BaseModel):
+    evidence_ref: str
+    original_value: str
+    normalized_value: str
+    resolution_status: str
+    match_type: Optional[str] = None
+    grounded_paths: List[str] = Field(default_factory=list)
+    ambiguity_count: int = 0
+    rationale: str = ""
+
+class CandidateFileRelationshipCaptured(BaseModel):
+    path: str
+    candidate_rank: int
+    candidate_score: float
+    relationship_score: float
+    relationship_strength: str
+    investigation_priority: str
+    relationship_types: List[str] = Field(default_factory=list)
+    matched_evidence_refs: List[str] = Field(default_factory=list)
+    matched_evidence_types: List[str] = Field(default_factory=list)
+    matched_evidence_strengths: List[str] = Field(default_factory=list)
+    matched_entities: List[str] = Field(default_factory=list)
+    matched_explicit_paths: List[str] = Field(default_factory=list)
+    subsystem_alignment: bool
+    category_alignment: bool
+    repository_map_alignment: bool
+    direct_evidence_score: float
+    entity_evidence_score: float
+    structural_alignment_score: float
+    ranking_support_score: float
+    candidate_ranking_reasons: List[str] = Field(default_factory=list)
+    rationale: str = ""
+
+class CandidateRelationshipEdgeCaptured(BaseModel):
+    source_path: str
+    target_path: str
+    relationship_types: List[str] = Field(default_factory=list)
+    shared_entities: List[str] = Field(default_factory=list)
+    shared_evidence_count: int = 0
+    shared_parent_path: Optional[str] = None
+    relationship_score: float
+    rationale: str = ""
+
+class FileRelationshipGroundingCaptured(BaseModel):
+    status: str = "NOT_OBSERVED"
+    explicit_path_resolutions: List[ExplicitPathResolutionCaptured] = Field(default_factory=list)
+    candidate_relationships: List[CandidateFileRelationshipCaptured] = Field(default_factory=list)
+    file_relationship_edges: List[CandidateRelationshipEdgeCaptured] = Field(default_factory=list)
+    investigation_order: List[str] = Field(default_factory=list)
+    total_candidates: int = 0
+    direct_relationship_count: int = 0
+    strong_relationship_count: int = 0
+    moderate_relationship_count: int = 0
+    weak_relationship_count: int = 0
+    primary_count: int = 0
+    secondary_count: int = 0
+    supporting_count: int = 0
+    low_confidence_count: int = 0
+    explicit_paths_available: int = 0
+    explicit_paths_grounded: int = 0
+    explicit_paths_ambiguous: int = 0
+    explicit_paths_ungrounded: int = 0
+    grounding_latency_ms: float = 0.0
+    additional_llm_calls: int = 0
+
 class IssueGuidanceTrace(BaseModel):
     issue_number: int
     title: str = ""
@@ -156,6 +221,7 @@ class IssueGuidanceTrace(BaseModel):
     technical_evidence: Optional[TechnicalEvidenceCaptured] = None
     classification_reconciliation: Optional[ClassificationReconciliationCaptured] = None
     context_budgeting: Optional[ContextBudgetingCaptured] = None
+    file_relationship_grounding: Optional[FileRelationshipGroundingCaptured] = None
 
 class RoadmapCaptured(BaseModel):
     raw_json: Dict[str, Any] = Field(default_factory=dict)

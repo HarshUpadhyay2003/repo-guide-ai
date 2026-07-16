@@ -47,7 +47,7 @@ COMPRESSED_GUIDANCE_PROMPT_INSTRUCTIONS = """Instructions for generating each JS
 2. "exploration_hints":
    - "affected_area": Module or layout area affected.
    - "likely_directories": Most likely directories (CRITICAL: Must be selected from Candidate Directories).
-   - "possible_files": Possible files to explore (CRITICAL: When Candidate Files & Evidence contains grounded repository paths, use those paths when identifying possible files. Do not state that filenames are unknown unless the candidate list is empty. Never invent or guess file names).
+   - "possible_files": Possible files to explore (CRITICAL: Prefer files marked with PRIMARY or SECONDARY investigation priority. Align exploration hints with the provided file relationship order. Never invent or guess file names).
    - "reasoning": Explain why these are relevant.
    - "confidence": Confidence score from 0 to 100."""
 
@@ -1022,6 +1022,7 @@ class IssueGuidanceService:
     def generate_guidance(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze issue and generate exploration hints in a single LLM request."""
         logger.info("Starting issue guidance generation with payload: %s", payload)
+        self._last_relationship_grounding = None
 
         try:
             start_total = time.perf_counter()
@@ -1132,6 +1133,36 @@ class IssueGuidanceService:
             logger.info("Candidate Ranking Completed in %.4fs", time.perf_counter() - t_stage)
             print("Candidate Ranking Completed.")
 
+            # STAGE 12.2.4 FILE RELATIONSHIP GROUNDING
+            t_ground = time.perf_counter()
+            try:
+                from app.utils.file_relationship_grounder import ground_file_relationships
+                relationship_grounding = ground_file_relationships(
+                    all_files=all_files,
+                    repository_map=repository_map,
+                    candidate_evidence=candidate_evidence,
+                    issue_intelligence=issue_intel,
+                    issue_evidence=issue_evidence
+                )
+                self._last_relationship_grounding = relationship_grounding
+                logger.info("File Relationship Grounding Completed in %.4fs", time.perf_counter() - t_ground)
+            except Exception as exc:
+                logger.exception("File relationship grounding failed: %s", exc)
+                from app.utils.file_relationship_grounder import FileRelationshipGroundingResult
+                self._last_relationship_grounding = FileRelationshipGroundingResult(
+                    status="FALLBACK",
+                    explicit_path_resolutions=[],
+                    candidate_relationships=[],
+                    file_relationship_edges=[],
+                    investigation_order=[c["path"] for c in candidate_evidence.candidates],
+                    total_candidates=len(candidate_evidence.candidates),
+                    direct_relationship_count=0, strong_relationship_count=0, moderate_relationship_count=0, weak_relationship_count=0,
+                    primary_count=0, secondary_count=0, supporting_count=0, low_confidence_count=len(candidate_evidence.candidates),
+                    explicit_paths_available=0, explicit_paths_grounded=0, explicit_paths_ambiguous=0, explicit_paths_ungrounded=0,
+                    grounding_latency_ms=(time.perf_counter() - t_ground) * 1000.0
+                )
+                relationship_grounding = self._last_relationship_grounding
+
             # Format instructions and schema
             instructions_text = COMPRESSED_GUIDANCE_PROMPT_INSTRUCTIONS
             json_schema_text = COMPRESSED_GUIDANCE_PROMPT_SCHEMA
@@ -1156,7 +1187,8 @@ class IssueGuidanceService:
                     comments=comments,
                     instructions_text=instructions_text,
                     json_schema_text=json_schema_text,
-                    budget_limit=1500
+                    budget_limit=1500,
+                    relationship_grounding=relationship_grounding
                 )
                 self._last_budgeted_context = budgeted_context
                 prompt_tokens = budgeted_context.estimated_tokens
