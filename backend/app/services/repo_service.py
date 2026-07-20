@@ -89,6 +89,36 @@ class RepoService:
         }
 
     def analyze_repository(self, url: str, mode: str = "FAST_MVP") -> Dict[str, Any]:
+        """Analyze a GitHub repository and return structured guidance with single-flight protection."""
+        from app.services.singleflight_service import single_flight_coordinator, normalize_repo_identity
+        
+        # 1. Normalize repo identity
+        try:
+            repo_key = normalize_repo_identity(url)
+            owner, repo = repo_key.split("/")
+        except Exception as exc:
+            logger.error("Failed to parse repository URL: %s", exc)
+            raise ValueError(f"Invalid GitHub repository URL: {url}") from exc
+
+        # 2. First Cache lookup (initial cache check outside coordinator to bypass if hit)
+        from app.core.cache.dependencies import get_cache_manager
+        cache_mgr = get_cache_manager()
+        try:
+            cached_result = cache_mgr.get_analysis(owner, repo)
+            if cached_result is not None:
+                logger.info("Cache hit for %s on initial check. Skipping coordinator.", repo_key)
+                return cached_result
+        except Exception as e:
+            logger.warning("Cache check failed in analyze_repository start: %s", e)
+
+        # 3. Define runner closure
+        def _do_analyze() -> Dict[str, Any]:
+            return self._analyze_repository_internal(url, mode)
+
+        # 4. Call execution via single-flight coordinator
+        return single_flight_coordinator.execute(url, _do_analyze, service_instance=self)
+
+    def _analyze_repository_internal(self, url: str, mode: str = "FAST_MVP") -> Dict[str, Any]:
         """Analyze a GitHub repository and return structured guidance."""
         request_start = time.perf_counter()
         logger.info("Starting repository analysis for URL: %s", url)
@@ -470,8 +500,15 @@ class RepoService:
                 from app.core.cache.keys import get_analysis_snapshot_key
                 from app.core.cache.config import CACHE_TTL_ANALYSIS
                 analysis_key = get_analysis_snapshot_key(owner, repo)
-                cache_mgr.set(analysis_key, response_dict, ttl=CACHE_TTL_ANALYSIS)
-                logger.info(f"Successfully cached analysis snapshot for {owner}/{repo}")
+                
+                # Check for Timeout/Expiration to prevent stale cache writes
+                from app.services.singleflight_service import get_current_thread_flight, FlightState
+                flight = get_current_thread_flight()
+                if flight and flight.state == FlightState.TIMEOUT:
+                    logger.warning("[%s] Stale flight due to timeout. Skipping cache write for %s/%s.", flight.flight_id, owner, repo)
+                else:
+                    cache_mgr.set(analysis_key, response_dict, ttl=CACHE_TTL_ANALYSIS)
+                    logger.info(f"Successfully cached analysis snapshot for {owner}/{repo}")
             except Exception as e:
                 logger.warning(f"Failed to cache analysis snapshot for {owner}/{repo}: {e}")
 

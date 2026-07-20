@@ -21,6 +21,7 @@ class Settings(BaseModel):
     MODEL_NAME: Annotated[str, StringConstraints(min_length=1)]
     CACHE_BACKEND: str = "memory"
     REDIS_URL: str = ""
+    SINGLEFLIGHT_TIMEOUT_SECONDS: int = 180
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -33,6 +34,7 @@ class Settings(BaseModel):
             MODEL_NAME=os.environ.get("MODEL_NAME", ""),
             CACHE_BACKEND=os.environ.get("CACHE_BACKEND", "memory"),
             REDIS_URL=os.environ.get("REDIS_URL", ""),
+            SINGLEFLIGHT_TIMEOUT_SECONDS=os.environ.get("SINGLEFLIGHT_TIMEOUT_SECONDS", "180"),
         )
 
 
