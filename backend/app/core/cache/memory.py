@@ -88,6 +88,13 @@ class MemoryCacheBackend(CacheBackend):
         """
         return self.delete(key)
 
+    def invalidate_pattern(self, pattern: str) -> None:
+        """Invalidate all keys matching the given pattern prefix."""
+        with self._lock:
+            keys_to_delete = [k for k in self._cache if k.startswith(pattern)]
+            for k in keys_to_delete:
+                del self._cache[k]
+
     def get_current_entries(self) -> int:
         """Get the count of active, non-expired entries in the cache."""
         with self._lock:

@@ -6,7 +6,7 @@ import time
 from typing import Any, Callable, Dict, Optional, Union
 
 from app.core.cache.base import CacheBackend
-from app.core.cache.keys import get_repo_summary_key, get_issue_guidance_key, get_analysis_snapshot_key
+from app.core.cache.keys import get_repo_summary_key, get_issue_guidance_key, get_analysis_snapshot_key, CACHE_VERSION, _normalize
 
 logger = logging.getLogger(__name__)
 
@@ -165,16 +165,29 @@ class CacheManager:
             self._deletes += 1
         return deleted
 
-    # RATIONALE FOR NAMESPACE INVALIDATION PLACEHOLDERS:
-    # Defining specific namespace invalidation methods early allows downstream services
-    # to adopt the correct semantic eviction patterns from the start, avoiding interface
-    # breaking changes when the full multi-tier invalidation logic is implemented in Stage 8.6.
+    def invalidate_pattern(self, pattern: str) -> None:
+        """Invalidate all keys matching the given pattern prefix."""
+        self._backend.invalidate_pattern(pattern)
+
     def invalidate_repository(self, owner: str, repo: str) -> None:
-        """Placeholder for invalidating all cache entries associated with a repository.
+        """Invalidate all cache entries associated with a repository and increment generation."""
+        o, r = _normalize(owner, repo)
+        pattern = f"cache:{CACHE_VERSION}:repo:{o}/{r}:"
         
-        TODO: Implement full scan/pattern invalidation in Stage 8.6.
-        """
-        self.invalidate_summary(owner, repo)
+        # 1. Invalidate all keys matching the prefix in the backend
+        self.invalidate_pattern(pattern)
+        
+        # 2. Increment the repository's generation version
+        from app.services.invalidation_tracker import invalidation_tracker
+        repo_key = f"{o}/{r}"
+        new_gen = invalidation_tracker.increment_generation(repo_key)
+        
+        # 3. Log structured invalidation information
+        logger.info(
+            "[CACHE_INVALIDATE] Repository invalidation executed: "
+            "Owner: %s | Repo: %s | Prefix: %s | New Generation: %d",
+            owner, repo, pattern, new_gen
+        )
 
     def invalidate_issue(self, owner: str, repo: str, issue_number: Union[int, str]) -> None:
         """Placeholder for invalidating guidance for a specific issue.
