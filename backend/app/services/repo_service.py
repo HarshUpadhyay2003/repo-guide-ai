@@ -113,7 +113,15 @@ class RepoService:
 
         # 3. Define runner closure
         def _do_analyze() -> Dict[str, Any]:
-            return self._analyze_repository_internal(url, mode)
+            from app.services.invalidation_tracker import invalidation_tracker
+            import time
+            start_gen = invalidation_tracker.get_generation(repo_key)
+            start_time = time.perf_counter()
+            invalidation_tracker.set_thread_generation(start_gen, start_time)
+            try:
+                return self._analyze_repository_internal(url, mode)
+            finally:
+                invalidation_tracker.clear_thread_generation()
 
         # 4. Call execution via single-flight coordinator
         return single_flight_coordinator.execute(url, _do_analyze, service_instance=self)
@@ -186,7 +194,12 @@ class RepoService:
                 return res, time.perf_counter() - t0
                 
             meta_total_start = time.perf_counter()
-            with ThreadPoolExecutor(max_workers=3) as executor:
+            from app.services.invalidation_tracker import invalidation_tracker
+            with ThreadPoolExecutor(
+                max_workers=3,
+                initializer=invalidation_tracker.init_worker,
+                initargs=(invalidation_tracker.get_thread_generation(), invalidation_tracker.get_thread_start_time())
+            ) as executor:
                 future_meta = executor.submit(fetch_metadata)
                 future_readme = executor.submit(fetch_readme)
                 future_contrib = executor.submit(fetch_contributing)
@@ -269,7 +282,12 @@ class RepoService:
             guidance_start = time.perf_counter()
             if top_issues:
                 if ENABLE_PARALLEL_ANALYSIS:
-                    with ThreadPoolExecutor(max_workers=min(5, len(top_issues))) as executor:
+                    from app.services.invalidation_tracker import invalidation_tracker
+                    with ThreadPoolExecutor(
+                        max_workers=min(5, len(top_issues)),
+                        initializer=invalidation_tracker.init_worker,
+                        initargs=(invalidation_tracker.get_thread_generation(), invalidation_tracker.get_thread_start_time())
+                    ) as executor:
                         futures = [executor.submit(self._analyze_issue_entry, owner, repo, issue, summary, repository_map, all_files, all_dirs) for issue in top_issues]
                         for future in as_completed(futures):
                             issues_with_analysis.append(future.result())

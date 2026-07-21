@@ -83,28 +83,35 @@ class InvalidationTracker:
 
     # --- Thread-local contexts ---
 
-    def set_thread_generation(self, generation: int) -> None:
+    def set_thread_generation(self, generation: int, start_time: Optional[float] = None) -> None:
         """Set the generation context for the current thread."""
         if not isinstance(generation, int):
             raise TypeError("Generation must be an integer.")
         _thread_local.generation = generation
+        _thread_local.start_time = start_time
 
     def get_thread_generation(self) -> Optional[int]:
         """Get the generation context for the current thread."""
         return getattr(_thread_local, "generation", None)
 
+    def get_thread_start_time(self) -> Optional[float]:
+        """Get the start time context for the current thread."""
+        return getattr(_thread_local, "start_time", None)
+
     def clear_thread_generation(self) -> None:
         """Clear the generation context for the current thread."""
         if hasattr(_thread_local, "generation"):
             delattr(_thread_local, "generation")
+        if hasattr(_thread_local, "start_time"):
+            delattr(_thread_local, "start_time")
 
-    def init_worker(self, generation: Optional[int]) -> None:
+    def init_worker(self, generation: Optional[int], start_time: Optional[float] = None) -> None:
         """Initialize a worker thread-local generation context.
         
         Suitable for ThreadPoolExecutor initializers.
         """
         if generation is not None:
-            self.set_thread_generation(generation)
+            self.set_thread_generation(generation, start_time)
         else:
             self.clear_thread_generation()
 

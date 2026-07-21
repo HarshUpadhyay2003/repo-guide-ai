@@ -112,6 +112,29 @@ class CacheManager:
         """
         _validate_json_compatible(value)
 
+        # Check repository generation if in a valid context
+        parts = key.split(":")
+        if len(parts) >= 4 and parts[0] == "cache" and parts[2] == "repo":
+            repo_key = parts[3]
+            from app.services.invalidation_tracker import invalidation_tracker
+            thread_gen = invalidation_tracker.get_thread_generation()
+            if thread_gen is not None:
+                current_gen = invalidation_tracker.get_generation(repo_key)
+                if current_gen != thread_gen:
+                    start_time = invalidation_tracker.get_thread_start_time()
+                    elapsed = time.perf_counter() - start_time if start_time is not None else 0.0
+                    logger.warning(
+                        "[CACHE_WRITE_SKIPPED] "
+                        "Repository: %s | "
+                        "Cache Key: %s | "
+                        "Start Generation: %d | "
+                        "Current Generation: %d | "
+                        "Elapsed: %.2fs | "
+                        "Reason: Invalidation triggered during active analysis.",
+                        repo_key, key, thread_gen, current_gen, elapsed
+                    )
+                    return
+
         # Generate ISO8601 timestamps in UTC
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         created_at_str = now_utc.isoformat()
