@@ -32,7 +32,11 @@ app.add_middleware(
     max_bytes=settings.MAX_PAYLOAD_SIZE_BYTES,
 )
 
-# 3. Trusted Proxy Headers Middleware (X-Forwarded-For, X-Forwarded-Proto)
+# 3. Rate Limiting Middleware (IP-based, sliding-window rate limiting)
+from app.middleware.rate_limit_middleware import RateLimitMiddleware
+app.add_middleware(RateLimitMiddleware)
+
+# 4. Trusted Proxy Headers Middleware (X-Forwarded-For, X-Forwarded-Proto)
 app.add_middleware(
     ProxyHeadersMiddleware,
     trusted_hosts="*",

@@ -24,6 +24,11 @@ class Settings(BaseModel):
     SINGLEFLIGHT_TIMEOUT_SECONDS: int = 180
     ALLOWED_ORIGINS: list[str] = ["*"]
     MAX_PAYLOAD_SIZE_BYTES: int = 1048576  # 1 MB default limit
+    RATE_LIMIT_ANALYZE_PER_MINUTE: int = 5
+    RATE_LIMIT_PDF_PER_MINUTE: int = 10
+    RATE_LIMIT_GENERAL_PER_MINUTE: int = 60
+    RATE_LIMIT_HEALTH_PER_MINUTE: int = 120
+    MAX_CONCURRENT_PDF_GENERATIONS: int = 3
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -36,6 +41,12 @@ class Settings(BaseModel):
         except ValueError:
             max_payload = 1048576
 
+        def get_int_env(name: str, default: int) -> int:
+            try:
+                return int(os.environ.get(name, str(default)))
+            except ValueError:
+                return default
+
         return cls(
             GITHUB_TOKEN=os.environ.get("GITHUB_TOKEN", ""),
             GROQ_API_KEY=os.environ.get("GROQ_API_KEY", ""),
@@ -46,6 +57,11 @@ class Settings(BaseModel):
             SINGLEFLIGHT_TIMEOUT_SECONDS=os.environ.get("SINGLEFLIGHT_TIMEOUT_SECONDS", "180"),
             ALLOWED_ORIGINS=origins,
             MAX_PAYLOAD_SIZE_BYTES=max_payload,
+            RATE_LIMIT_ANALYZE_PER_MINUTE=get_int_env("RATE_LIMIT_ANALYZE_PER_MINUTE", 5),
+            RATE_LIMIT_PDF_PER_MINUTE=get_int_env("RATE_LIMIT_PDF_PER_MINUTE", 10),
+            RATE_LIMIT_GENERAL_PER_MINUTE=get_int_env("RATE_LIMIT_GENERAL_PER_MINUTE", 60),
+            RATE_LIMIT_HEALTH_PER_MINUTE=get_int_env("RATE_LIMIT_HEALTH_PER_MINUTE", 120),
+            MAX_CONCURRENT_PDF_GENERATIONS=get_int_env("MAX_CONCURRENT_PDF_GENERATIONS", 3),
         )
 
 
