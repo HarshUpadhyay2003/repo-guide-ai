@@ -66,27 +66,15 @@ def normalize_repo_identity(url_or_identity: str) -> str:
         raise ValueError("Repository identifier must be a non-empty string.")
         
     val = url_or_identity.strip()
+    from app.utils.url_validation import validate_github_url
     
-    # Strip protocol prefix if present
-    if val.startswith("http://") or val.startswith("https://"):
-        from app.utils.github_parser import parse_github_url
-        parsed = parse_github_url(val)
-        owner = parsed["owner"]
-        repo = parsed["repo"]
+    if "/" in val and not val.startswith("http://") and not val.startswith("https://"):
+        full_url = f"https://github.com/{val}"
+        owner, repo = validate_github_url(full_url)
     else:
-        # Check if it is in format owner/repo
-        if val.endswith("/"):
-            val = val[:-1]
-        parts = [p for p in val.split("/") if p.strip()]
-        if len(parts) == 2:
-            owner, repo = parts[0], parts[1]
-        else:
-            raise ValueError(f"Invalid repository identity format: {url_or_identity}")
-            
-    if repo.lower().endswith(".git"):
-        repo = repo[:-4]
+        owner, repo = validate_github_url(val)
         
-    return f"{owner.lower()}/{repo.lower()}"
+    return f"{owner}/{repo}"
 
 class SingleFlightCoordinator:
     def __init__(self, default_timeout: Optional[float] = None):

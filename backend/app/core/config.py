@@ -22,11 +22,20 @@ class Settings(BaseModel):
     CACHE_BACKEND: str = "memory"
     REDIS_URL: str = ""
     SINGLEFLIGHT_TIMEOUT_SECONDS: int = 180
+    ALLOWED_ORIGINS: list[str] = ["*"]
+    MAX_PAYLOAD_SIZE_BYTES: int = 1048576  # 1 MB default limit
 
     @classmethod
     def from_env(cls) -> "Settings":
         """Build settings from the current process environment after loading .env."""
         load_dotenv(BASE_DIR / ".env", override=False)
+        raw_origins = os.environ.get("ALLOWED_ORIGINS", "*")
+        origins = [item.strip() for item in raw_origins.split(",") if item.strip()] if isinstance(raw_origins, str) else ["*"]
+        try:
+            max_payload = int(os.environ.get("MAX_PAYLOAD_SIZE_BYTES", "1048576"))
+        except ValueError:
+            max_payload = 1048576
+
         return cls(
             GITHUB_TOKEN=os.environ.get("GITHUB_TOKEN", ""),
             GROQ_API_KEY=os.environ.get("GROQ_API_KEY", ""),
@@ -35,6 +44,8 @@ class Settings(BaseModel):
             CACHE_BACKEND=os.environ.get("CACHE_BACKEND", "memory"),
             REDIS_URL=os.environ.get("REDIS_URL", ""),
             SINGLEFLIGHT_TIMEOUT_SECONDS=os.environ.get("SINGLEFLIGHT_TIMEOUT_SECONDS", "180"),
+            ALLOWED_ORIGINS=origins,
+            MAX_PAYLOAD_SIZE_BYTES=max_payload,
         )
 
 
