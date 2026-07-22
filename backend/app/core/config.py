@@ -21,11 +21,42 @@ class Settings(BaseModel):
     MODEL_NAME: Annotated[str, StringConstraints(min_length=1)]
     CACHE_BACKEND: str = "memory"
     REDIS_URL: str = ""
+    SINGLEFLIGHT_TIMEOUT_SECONDS: int = 180
+    ALLOWED_ORIGINS: list[str] = ["*"]
+    MAX_PAYLOAD_SIZE_BYTES: int = 1048576  # 1 MB default limit
+    RATE_LIMIT_ANALYZE_PER_MINUTE: int = 5
+    RATE_LIMIT_PDF_PER_MINUTE: int = 10
+    RATE_LIMIT_GENERAL_PER_MINUTE: int = 60
+    RATE_LIMIT_HEALTH_PER_MINUTE: int = 120
+    MAX_CONCURRENT_PDF_GENERATIONS: int = 3
+    ENABLE_GZIP: bool = True
+    GZIP_MINIMUM_SIZE: int = 1000
+    ENABLE_HSTS: bool = False
+    HSTS_MAX_AGE: int = 31536000
 
     @classmethod
     def from_env(cls) -> "Settings":
         """Build settings from the current process environment after loading .env."""
         load_dotenv(BASE_DIR / ".env", override=False)
+        raw_origins = os.environ.get("ALLOWED_ORIGINS", "*")
+        origins = [item.strip() for item in raw_origins.split(",") if item.strip()] if isinstance(raw_origins, str) else ["*"]
+        try:
+            max_payload = int(os.environ.get("MAX_PAYLOAD_SIZE_BYTES", "1048576"))
+        except ValueError:
+            max_payload = 1048576
+
+        def get_int_env(name: str, default: int) -> int:
+            try:
+                return int(os.environ.get(name, str(default)))
+            except ValueError:
+                return default
+
+        def get_bool_env(name: str, default: bool) -> bool:
+            val = os.environ.get(name)
+            if val is None:
+                return default
+            return val.strip().lower() in ("true", "1", "yes", "on")
+
         return cls(
             GITHUB_TOKEN=os.environ.get("GITHUB_TOKEN", ""),
             GROQ_API_KEY=os.environ.get("GROQ_API_KEY", ""),
@@ -33,6 +64,18 @@ class Settings(BaseModel):
             MODEL_NAME=os.environ.get("MODEL_NAME", ""),
             CACHE_BACKEND=os.environ.get("CACHE_BACKEND", "memory"),
             REDIS_URL=os.environ.get("REDIS_URL", ""),
+            SINGLEFLIGHT_TIMEOUT_SECONDS=os.environ.get("SINGLEFLIGHT_TIMEOUT_SECONDS", "180"),
+            ALLOWED_ORIGINS=origins,
+            MAX_PAYLOAD_SIZE_BYTES=max_payload,
+            RATE_LIMIT_ANALYZE_PER_MINUTE=get_int_env("RATE_LIMIT_ANALYZE_PER_MINUTE", 5),
+            RATE_LIMIT_PDF_PER_MINUTE=get_int_env("RATE_LIMIT_PDF_PER_MINUTE", 10),
+            RATE_LIMIT_GENERAL_PER_MINUTE=get_int_env("RATE_LIMIT_GENERAL_PER_MINUTE", 60),
+            RATE_LIMIT_HEALTH_PER_MINUTE=get_int_env("RATE_LIMIT_HEALTH_PER_MINUTE", 120),
+            MAX_CONCURRENT_PDF_GENERATIONS=get_int_env("MAX_CONCURRENT_PDF_GENERATIONS", 3),
+            ENABLE_GZIP=get_bool_env("ENABLE_GZIP", True),
+            GZIP_MINIMUM_SIZE=get_int_env("GZIP_MINIMUM_SIZE", 1000),
+            ENABLE_HSTS=get_bool_env("ENABLE_HSTS", False),
+            HSTS_MAX_AGE=get_int_env("HSTS_MAX_AGE", 31536000),
         )
 
 

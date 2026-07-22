@@ -2,15 +2,22 @@ import time
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.services.repo_service import RepoService
+from app.utils.url_validation import validate_github_url
 
 router = APIRouter(prefix="/repo", tags=["repo"])
 
 
 class RepoAnalyzeRequest(BaseModel):
     url: str = Field(..., min_length=1, description="GitHub repository URL")
+
+    @field_validator("url")
+    @classmethod
+    def check_github_url(cls, v: str) -> str:
+        validate_github_url(v)
+        return v
 
 
 class RepoAnalyzeResponse(BaseModel):

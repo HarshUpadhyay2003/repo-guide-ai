@@ -54,6 +54,11 @@ class CacheBackend(ABC):
         pass
 
     @abstractmethod
+    def invalidate_pattern(self, pattern: str) -> None:
+        """Invalidate all keys matching the given pattern prefix."""
+        pass
+
+    @abstractmethod
     def get_current_entries(self) -> int:
         """Get the count of active, non-expired entries in the cache."""
         pass

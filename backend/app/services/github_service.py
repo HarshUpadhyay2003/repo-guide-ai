@@ -346,7 +346,12 @@ class GitHubService:
                 timings[label] = dur
 
             search_total_start = time.perf_counter()
-            with ThreadPoolExecutor(max_workers=min(4, len(good_first_labels))) as executor:
+            from app.services.invalidation_tracker import invalidation_tracker
+            with ThreadPoolExecutor(
+                max_workers=min(4, len(good_first_labels)),
+                initializer=invalidation_tracker.init_worker,
+                initargs=(invalidation_tracker.get_thread_generation(), invalidation_tracker.get_thread_start_time())
+            ) as executor:
                 executor.map(search_worker, good_first_labels)
             search_total_dur = time.perf_counter() - search_total_start
 

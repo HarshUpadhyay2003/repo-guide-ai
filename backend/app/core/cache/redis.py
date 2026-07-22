@@ -32,6 +32,9 @@ class RedisCacheBackend(CacheBackend):
     def invalidate(self, key: str) -> bool:
         raise NotImplementedError("Redis cache backend is not implemented yet.")
 
+    def invalidate_pattern(self, pattern: str) -> None:
+        raise NotImplementedError("Redis cache backend is not implemented yet.")
+
     def get_current_entries(self) -> int:
         raise NotImplementedError("Redis cache backend is not implemented yet.")
 
