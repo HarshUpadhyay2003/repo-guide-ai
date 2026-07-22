@@ -14,7 +14,23 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Repo Guide AI", version="1.0.0")
 
-# 1. CORS Configuration (Environment-driven, compliant credential handling)
+# 1. GZip Compression Middleware (innermost middleware wrapper)
+if settings.ENABLE_GZIP:
+    from fastapi.middleware.gzip import GZipMiddleware
+    app.add_middleware(
+        GZipMiddleware,
+        minimum_size=settings.GZIP_MINIMUM_SIZE,
+    )
+
+# 2. Security Headers Middleware (attaches defensive headers to all responses)
+from app.middleware.security_headers import SecurityHeadersMiddleware
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    enable_hsts=settings.ENABLE_HSTS,
+    hsts_max_age=settings.HSTS_MAX_AGE,
+)
+
+# 3. CORS Configuration (Environment-driven, compliant credential handling)
 origins = settings.ALLOWED_ORIGINS
 allow_creds = "*" not in origins
 
@@ -26,17 +42,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Request Body Size Limiter
+# 4. Request Body Size Limiter
 app.add_middleware(
     BodySizeLimitMiddleware,
     max_bytes=settings.MAX_PAYLOAD_SIZE_BYTES,
 )
 
-# 3. Rate Limiting Middleware (IP-based, sliding-window rate limiting)
+# 5. Rate Limiting Middleware (IP-based, sliding-window rate limiting)
 from app.middleware.rate_limit_middleware import RateLimitMiddleware
 app.add_middleware(RateLimitMiddleware)
 
-# 4. Trusted Proxy Headers Middleware (X-Forwarded-For, X-Forwarded-Proto)
+# 6. Trusted Proxy Headers Middleware (X-Forwarded-For, X-Forwarded-Proto)
 app.add_middleware(
     ProxyHeadersMiddleware,
     trusted_hosts="*",

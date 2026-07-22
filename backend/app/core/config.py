@@ -29,6 +29,10 @@ class Settings(BaseModel):
     RATE_LIMIT_GENERAL_PER_MINUTE: int = 60
     RATE_LIMIT_HEALTH_PER_MINUTE: int = 120
     MAX_CONCURRENT_PDF_GENERATIONS: int = 3
+    ENABLE_GZIP: bool = True
+    GZIP_MINIMUM_SIZE: int = 1000
+    ENABLE_HSTS: bool = False
+    HSTS_MAX_AGE: int = 31536000
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -47,6 +51,12 @@ class Settings(BaseModel):
             except ValueError:
                 return default
 
+        def get_bool_env(name: str, default: bool) -> bool:
+            val = os.environ.get(name)
+            if val is None:
+                return default
+            return val.strip().lower() in ("true", "1", "yes", "on")
+
         return cls(
             GITHUB_TOKEN=os.environ.get("GITHUB_TOKEN", ""),
             GROQ_API_KEY=os.environ.get("GROQ_API_KEY", ""),
@@ -62,6 +72,10 @@ class Settings(BaseModel):
             RATE_LIMIT_GENERAL_PER_MINUTE=get_int_env("RATE_LIMIT_GENERAL_PER_MINUTE", 60),
             RATE_LIMIT_HEALTH_PER_MINUTE=get_int_env("RATE_LIMIT_HEALTH_PER_MINUTE", 120),
             MAX_CONCURRENT_PDF_GENERATIONS=get_int_env("MAX_CONCURRENT_PDF_GENERATIONS", 3),
+            ENABLE_GZIP=get_bool_env("ENABLE_GZIP", True),
+            GZIP_MINIMUM_SIZE=get_int_env("GZIP_MINIMUM_SIZE", 1000),
+            ENABLE_HSTS=get_bool_env("ENABLE_HSTS", False),
+            HSTS_MAX_AGE=get_int_env("HSTS_MAX_AGE", 31536000),
         )
 
 
