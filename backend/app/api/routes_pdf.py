@@ -122,6 +122,7 @@ def get_contribution_pdf(
     owner: str,
     repo: str,
     request: Request,
+    issue_number: int | None = None,
     cache_mgr: CacheManager = Depends(get_cache_manager),
 ) -> Response:
     """Generate and return the Contribution Guide PDF if analysis snapshot exists in cache."""
@@ -139,7 +140,7 @@ def get_contribution_pdf(
     
     start_time = time.perf_counter()
     try:
-        pdf_bytes = ContributionReportTemplate.generate(repo_name=repo, analysis_data=snapshot)
+        pdf_bytes = ContributionReportTemplate.generate(repo_name=repo, analysis_data=snapshot, issue_number=issue_number)
     except Exception as exc:
         logger.exception("Failed to generate Contribution PDF")
         raise HTTPException(
@@ -152,9 +153,10 @@ def get_contribution_pdf(
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)
     logger.info("[PDF][Contribution] Generated in %d ms", elapsed_ms)
 
-    filename = f"{repo.lower()}_contribution_guide.pdf"
+    filename = f"{repo.lower()}_issue_{issue_number}_contribution_guide.pdf" if issue_number else f"{repo.lower()}_contribution_guide.pdf"
     headers = {
         "Content-Disposition": f"attachment; filename={filename}",
         "Access-Control-Expose-Headers": "Content-Disposition",
     }
     return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+

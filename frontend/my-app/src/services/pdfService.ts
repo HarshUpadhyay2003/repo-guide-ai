@@ -85,13 +85,21 @@ export async function downloadIssueGuide(
 }
 
 /**
- * Downloads the Contribution Guide PDF.
+ * Downloads the Contribution Guide PDF for a specific repository and optional issue.
  *
  * @param owner GitHub repository owner
  * @param repo GitHub repository name
+ * @param issueNumber Optional GitHub issue number
  */
-export async function downloadContributionGuide(owner: string, repo: string): Promise<void> {
-  const url = `/pdf/contribution?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`;
-  const fallbackFilename = `${repo.toLowerCase()}_contribution_guide.pdf`;
+export async function downloadContributionGuide(
+  owner: string,
+  repo: string,
+  issueNumber?: number | string
+): Promise<void> {
+  const issueQuery = issueNumber ? `&issue_number=${encodeURIComponent(issueNumber)}` : '';
+  const url = `/pdf/contribution?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}${issueQuery}`;
+  const fallbackFilename = issueNumber
+    ? `${repo.toLowerCase()}_issue_${issueNumber}_contribution_guide.pdf`
+    : `${repo.toLowerCase()}_contribution_guide.pdf`;
   await downloadPDF(url, fallbackFilename);
 }

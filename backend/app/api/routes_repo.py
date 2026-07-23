@@ -4,6 +4,8 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 
+from app.core.cache.dependencies import get_cache_manager
+from app.core.cache.manager import CacheManager
 from app.services.repo_service import RepoService
 from app.utils.url_validation import validate_github_url
 
@@ -41,11 +43,11 @@ def analyze_repository(
     request_start = time.perf_counter()
     try:
         result = service.analyze_repository(payload.url)
-        
+
         validation_start = time.perf_counter()
         response_obj = RepoAnalyzeResponse(**result)
         validation_dur = time.perf_counter() - validation_start
-        
+
         serialization_start = time.perf_counter()
         # Serialize to JSON to measure JSON serialization overhead
         response_obj.model_dump_json()
@@ -62,3 +64,19 @@ def analyze_repository(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+
+
+@router.get("/analysis", response_model=RepoAnalyzeResponse, status_code=status.HTTP_200_OK)
+def get_cached_repository_analysis(
+    owner: str,
+    repo: str,
+    cache_mgr: CacheManager = Depends(get_cache_manager),
+) -> RepoAnalyzeResponse:
+    """Retrieve an existing repository analysis snapshot from cache if available."""
+    snapshot = cache_mgr.get_analysis(owner, repo)
+    if not snapshot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Repository analysis not found. Please analyze the repository first.",
+        )
+    return RepoAnalyzeResponse(**snapshot)

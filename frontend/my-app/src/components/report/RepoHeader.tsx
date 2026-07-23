@@ -90,22 +90,6 @@ export function RepoHeader({ metadata, owner, repo, issues }: RepoHeaderProps) {
                   )}
                 </button>
 
-                <button
-                  disabled={downloadingKey === "contrib"}
-                  onClick={() => handleDownload("contrib")}
-                  className="flex w-full items-center justify-between px-4 py-2.5 text-sm text-left hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-[#8B5CF6]" />
-                    Contribution Guide (PDF)
-                  </span>
-                  {downloadingKey === "contrib" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
-                  ) : (
-                    <Download className="h-3.5 w-3.5 text-slate-500" />
-                  )}
-                </button>
-
                 {issues && issues.length > 0 && (
                   <>
                     <div className="border-t border-white/5 my-1"></div>

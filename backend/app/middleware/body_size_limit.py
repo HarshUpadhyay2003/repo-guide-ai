@@ -1,44 +1,78 @@
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
-class BodySizeLimitMiddleware(BaseHTTPMiddleware):
-    """Middleware enforcing a maximum payload size limit on incoming requests."""
+class PayloadTooLargeError(Exception):
+    """Internal exception raised when streaming request body exceeds max_bytes."""
 
-    def __init__(self, app, max_bytes: int = 1048576):
-        super().__init__(app)
+    pass
+
+
+class BodySizeLimitMiddleware:
+    """Pure ASGI middleware enforcing a maximum payload size limit on incoming requests."""
+
+    def __init__(self, app: ASGIApp, max_bytes: int = 1048576):
+        self.app = app
         self.max_bytes = max_bytes
 
-    async def dispatch(self, request: Request, call_next):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
         # 1. Quick check using Content-Length header if available
-        content_length = request.headers.get("content-length")
-        if content_length:
+        headers = dict(scope.get("headers", []))
+        content_length_bytes = headers.get(b"content-length")
+        if content_length_bytes:
             try:
-                length = int(content_length)
+                length = int(content_length_bytes.decode("latin-1"))
                 if length > self.max_bytes:
-                    return JSONResponse(
+                    response = JSONResponse(
                         status_code=413,
-                        content={"detail": f"Payload too large. Maximum permitted request size is {self.max_bytes} bytes."},
+                        content={
+                            "detail": f"Payload too large. Maximum permitted request size is {self.max_bytes} bytes."
+                        },
                     )
-            except ValueError:
+                    await response(scope, receive, send)
+                    return
+            except (ValueError, UnicodeDecodeError):
                 pass
 
-        # 2. For state-changing methods with body content, check actual stream size if Content-Length was missing/invalid
-        if request.method in ("POST", "PUT", "PATCH"):
-            body_bytes = bytearray()
-            async for chunk in request.stream():
-                body_bytes.extend(chunk)
-                if len(body_bytes) > self.max_bytes:
-                    return JSONResponse(
-                        status_code=413,
-                        content={"detail": f"Payload too large. Maximum permitted request size is {self.max_bytes} bytes."},
-                    )
+        # 2. For state-changing methods with body content, check actual stream size
+        method = scope.get("method", "GET").upper()
+        if method not in ("POST", "PUT", "PATCH"):
+            await self.app(scope, receive, send)
+            return
 
-            # Re-inject the consumed stream so downstream endpoint handlers can parse the body
-            async def receive():
-                return {"type": "http.request", "body": bytes(body_bytes)}
+        received_bytes = 0
+        response_started = False
 
-            request._receive = receive
+        async def custom_send(message: Message) -> None:
+            nonlocal response_started
+            if message["type"] == "http.response.start":
+                response_started = True
+            await send(message)
 
-        return await call_next(request)
+        async def custom_receive() -> Message:
+            nonlocal received_bytes
+            message = await receive()
+            if message.get("type") == "http.request":
+                body = message.get("body", b"")
+                received_bytes += len(body)
+                if received_bytes > self.max_bytes:
+                    raise PayloadTooLargeError()
+            return message
+
+        try:
+            await self.app(scope, custom_receive, custom_send)
+        except PayloadTooLargeError:
+            if not response_started:
+                response = JSONResponse(
+                    status_code=413,
+                    content={
+                        "detail": f"Payload too large. Maximum permitted request size is {self.max_bytes} bytes."
+                    },
+                )
+                await response(scope, receive, send)
+            else:
+                raise

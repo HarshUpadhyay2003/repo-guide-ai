@@ -26,7 +26,7 @@ export function ActionBar({ owner, repo, downloadType, issueNumber }: ActionBarP
         }
         await downloadIssueGuide(owner, repo, issueNumber);
       } else {
-        await downloadContributionGuide(owner, repo);
+        await downloadContributionGuide(owner, repo, issueNumber);
       }
     } catch (err: any) {
       setError(err.message || "An error occurred.");

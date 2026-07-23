@@ -1,12 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { RepoHeader } from "../../components/report/RepoHeader";
 import { RepoSummaryCard } from "../../components/report/RepoSummaryCard";
 import { RepoMapSection } from "../../components/report/RepoMapSection";
 import { IssueList } from "../../components/report/IssueList";
 import PageContainer from "../../components/layout/PageContainer";
+import { useAnalysisData } from "../../hooks/useAnalysisData";
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -16,36 +18,30 @@ function ReportContent() {
     ? repoParam.split("/") 
     : ["PostHog", repoParam];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [data, setData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setIsLoading(true);
-    
-    try {
-      const storedData = sessionStorage.getItem("repo_guide_analysis_data");
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        // Support direct payload or wrapped in 'data' layer just in case
-        setData(parsed.data || parsed);
-      }
-    } catch (err) {
-      console.error("Failed to load analysis from sessionStorage:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [owner, name]);
+  const { data, isLoading, isNotFound } = useAnalysisData(owner, name);
 
   if (isLoading) {
-    return null; // Optional: Handle localized layout loading here if necessary
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-background text-slate-400 font-sans">
+        Loading repository analysis...
+      </div>
+    );
   }
 
-  if (!data) {
+  if (isNotFound || !data) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-background text-[#EF4444] font-sans">
-        Failed to load repository analysis.
-      </div>
+      <PageContainer>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center bg-background font-sans">
+          <h1 className="text-2xl font-bold text-[#EF4444] mb-2">Repository analysis not found</h1>
+          <p className="text-slate-400 mb-6">No cached analysis available for {owner}/{name}.</p>
+          <Link
+            href={`/analyze?repo=${encodeURIComponent(repoParam)}`}
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-white bg-[#8B5CF6] hover:bg-[#7C3AED] transition-colors"
+          >
+            Analyze Repository Now
+          </Link>
+        </div>
+      </PageContainer>
     );
   }
 

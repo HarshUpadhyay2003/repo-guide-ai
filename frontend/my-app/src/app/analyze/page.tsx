@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AnalysisLoadingState } from "../../components/report/AnalysisLoadingState";
 import { useAnalysis } from "../../hooks/useAnalysis";
 
+import { saveAnalysisToStorage } from "../../services/analysisDataService";
+
 function AnalyzeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,8 +29,8 @@ function AnalyzeContent() {
         { url: `https://github.com/${owner}/${name}` },
         {
           onSuccess: (data) => {
-            sessionStorage.setItem("repo_guide_analysis_data", JSON.stringify(data));
-            router.replace(`/report?repo=${repoParam}`);
+            saveAnalysisToStorage(owner, name, data);
+            router.replace(`/report?repo=${encodeURIComponent(repoParam)}`);
           }
         }
       );

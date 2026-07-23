@@ -30,7 +30,7 @@ class ContributionReportTemplate:
     Composes shared visual components using real backend contributor roadmap data.
     """
     @staticmethod
-    def generate(repo_name: str, analysis_data: dict = None, author: str = "RepoPilot", date_str: str = None) -> bytes:
+    def generate(repo_name: str, analysis_data: dict = None, issue_number: int | None = None, author: str = "RepoPilot", date_str: str = None) -> bytes:
         styles = get_shared_styles()
         flowables = []
         
@@ -48,18 +48,26 @@ class ContributionReportTemplate:
         repo = name
         estimated_learning_time = summary.get("estimated_learning_time", "Unknown")
         
-        # Extract best issue to start
-        best_issue = roadmap.get("best_issue_to_start", {})
-        best_issue_number = best_issue.get("issue_number", "Unknown")
-        best_issue_title = best_issue.get("title", "Recommended Issue")
-        
+        # Determine target issue number
+        target_issue_number = issue_number
+        if not target_issue_number:
+            best_issue = roadmap.get("best_issue_to_start", {})
+            target_issue_number = best_issue.get("issue_number", "Unknown")
+
         # Try to locate the issue details from analysis_data.get("issues", [])
         matching_issue = None
         for issue_entry in analysis_data.get("issues", []):
             raw = issue_entry.get("raw_issue", {})
-            if raw.get("number") == best_issue_number:
+            if str(raw.get("number")) == str(target_issue_number):
                 matching_issue = issue_entry
                 break
+                
+        best_issue_number = target_issue_number
+        if matching_issue:
+            best_issue_title = matching_issue.get("raw_issue", {}).get("title", "Recommended Issue")
+        else:
+            best_issue_title = roadmap.get("best_issue_to_start", {}).get("title", "Recommended Issue")
+
                 
         # Fallbacks for issue-specific fields
         difficulty = "Beginner"
