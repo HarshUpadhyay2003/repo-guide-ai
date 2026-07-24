@@ -16,6 +16,7 @@ import { FilesToExplore } from '@/components/contribution/FilesToExplore';
 import { SuggestedWorkflow } from '@/components/contribution/SuggestedWorkflow';
 import { PRChecklist } from '@/components/contribution/PRChecklist';
 import { ContributionFinalCTA } from '@/components/contribution/ContributionFinalCTA';
+import { FeedbackButton } from '@/components/feedback/FeedbackButton';
 
 function ContributionContent() {
   const params = useParams();
@@ -134,6 +135,7 @@ function ContributionContent() {
           <PRChecklist checklist={pr_checklist} />
           <ContributionFinalCTA issueNumber={raw_issue.number} githubUrl={raw_issue.url} repo={repository} />
         </div>
+        <FeedbackButton variant="floating" />
       </div>
     </PageContainer>
   );

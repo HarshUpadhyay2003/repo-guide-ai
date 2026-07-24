@@ -9,6 +9,8 @@ import { RepoMapSection } from "../../components/report/RepoMapSection";
 import { IssueList } from "../../components/report/IssueList";
 import PageContainer from "../../components/layout/PageContainer";
 import { useAnalysisData } from "../../hooks/useAnalysisData";
+import { FeedbackBanner } from "../../components/feedback/FeedbackBanner";
+import { FeedbackButton } from "../../components/feedback/FeedbackButton";
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -50,10 +52,12 @@ function ReportContent() {
 
   return (
     <PageContainer>
+      <FeedbackBanner />
       <RepoHeader metadata={dynamicMetadata} owner={owner} repo={name} issues={data.issues} />
       <RepoSummaryCard summary={data.summary} />
       <RepoMapSection repoMap={data.repository_map} />
       <IssueList issues={data.issues} owner={owner} repo={name} />
+      <FeedbackButton variant="floating" />
     </PageContainer>
   );
 }

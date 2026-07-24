@@ -13,6 +13,7 @@ import GenerateGuideCTA from '@/components/report/GenerateGuideCTA';
 import PageContainer from '@/components/layout/PageContainer';
 import { ActionBar } from '@/components/report/ActionBar';
 import { useAnalysisData } from '@/hooks/useAnalysisData';
+import { FeedbackButton } from '@/components/feedback/FeedbackButton';
 
 function IssuePageContent() {
   const params = useParams();
@@ -97,6 +98,7 @@ function IssuePageContent() {
           </div>
         </div>
         <GenerateGuideCTA issueId={issueId} owner={owner} repo={name} />
+        <FeedbackButton variant="floating" />
       </div>
     </PageContainer>
   );

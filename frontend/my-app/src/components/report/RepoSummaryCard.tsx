@@ -1,5 +1,6 @@
 import { Target, Clock, AlertTriangle, Layers, BookOpen, Lightbulb } from "lucide-react";
 import { RepositorySummary } from "../../../repository";
+import { ReportAIIssueButton } from "../feedback/ReportAIIssueButton";
 
 interface RepoSummaryCardProps {
   summary: RepositorySummary;
@@ -10,10 +11,13 @@ export function RepoSummaryCard({ summary }: RepoSummaryCardProps) {
 
   return (
     <div className="flex flex-col gap-6 rounded-xl border border-white/5 bg-[#111217] p-6 shadow-lg hover:border-[#8B5CF6]/30 hover:shadow-[0_0_24px_rgba(139,92,246,0.10)] transition-all duration-300 sm:p-8">
-      <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-200">
-        <BookOpen className="h-5 w-5 text-[#8B5CF6]" />
-        Repository Overview
-      </h2>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-200">
+          <BookOpen className="h-5 w-5 text-[#8B5CF6]" />
+          Repository Overview
+        </h2>
+        <ReportAIIssueButton sectionName="Repository Summary" />
+      </div>
       
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
         {/* Left Column: Text Summaries */}

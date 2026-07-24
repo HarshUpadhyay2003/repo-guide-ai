@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FolderTree, Folder, ChevronDown } from "lucide-react";
 import { RepositoryMap } from "../../../repository";
+import { ReportAIIssueButton } from "../feedback/ReportAIIssueButton";
 
 interface RepoMapSectionProps {
   repoMap: RepositoryMap;
@@ -38,10 +39,13 @@ export function RepoMapSection({ repoMap }: RepoMapSectionProps) {
 
   return (
     <div className="flex flex-col gap-6 rounded-xl border border-white/5 bg-[#111217] p-6 shadow-lg hover:border-[#8B5CF6]/30 hover:shadow-[0_0_24px_rgba(139,92,246,0.10)] transition-all duration-300 sm:p-8 animate-fade-in-up">
-      <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-200 font-sans">
-        <FolderTree className="h-5 w-5 text-[#8B5CF6]" />
-        Repository Map
-      </h2>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="flex items-center gap-2 text-xl font-semibold text-slate-200 font-sans">
+          <FolderTree className="h-5 w-5 text-[#8B5CF6]" />
+          Repository Map
+        </h2>
+        <ReportAIIssueButton sectionName="Repository Map" />
+      </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map(({ key, label }) => {
           const paths = repoMap[key] as string[];

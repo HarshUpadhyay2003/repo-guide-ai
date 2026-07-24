@@ -1,4 +1,5 @@
 import React from 'react';
+import { ReportAIIssueButton } from '../feedback/ReportAIIssueButton';
 
 interface InvestigationReasoningCardProps {
   reasoning: string;
@@ -14,7 +15,10 @@ export default function InvestigationReasoningCard({ reasoning }: InvestigationR
           </svg>
         </div>
         <div className="ml-4 min-w-0 flex-1">
-          <h2 className="text-lg font-bold text-slate-100 mb-2 font-sans">AI Investigation Reasoning</h2>
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <h2 className="text-lg font-bold text-slate-100 font-sans">AI Investigation Reasoning</h2>
+            <ReportAIIssueButton sectionName="Investigation Reasoning" />
+          </div>
           <p className="text-slate-300 leading-relaxed text-sm font-sans break-words [overflow-wrap:anywhere]">{reasoning}</p>
         </div>
       </div>
