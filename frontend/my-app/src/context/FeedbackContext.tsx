@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, Suspense } from 'react';
 import { useSessionTracking } from '../hooks/useSessionTracking';
 import { feedbackService } from '../services/feedbackService';
 
@@ -27,9 +27,20 @@ interface FeedbackContextType {
 
 const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined);
 
-export function FeedbackProvider({ children }: { children: ReactNode }) {
+function SessionTrackerChild() {
   useSessionTracking();
+  return null;
+}
 
+function SessionTracker() {
+  return (
+    <Suspense fallback={null}>
+      <SessionTrackerChild />
+    </Suspense>
+  );
+}
+
+export function FeedbackProvider({ children }: { children: ReactNode }) {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isReportAIIssueModalOpen, setIsReportAIIssueModalOpen] = useState(false);
   const [reportAIContext, setReportAIContext] = useState<ReportAIIssueContext | null>(null);
@@ -77,6 +88,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         hideToast,
       }}
     >
+      <SessionTracker />
       {children}
     </FeedbackContext.Provider>
   );

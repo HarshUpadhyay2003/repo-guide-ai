@@ -85,8 +85,63 @@ class LLMService:
                     f"Model response was not valid JSON. Raw output: {raw_text}"
                 ) from fallback_exc
 
+    def _is_retryable_error(self, exc: Exception) -> tuple[bool, str, str]:
+        """
+        Classify an exception from an LLM call.
+        Returns: (is_retryable: bool, reason: str, category: str)
+        """
+        exc_str = str(exc).lower()
+
+        # 1. Non-retryable authentication & authorization errors
+        if any(term in exc_str for term in ["invalid api key", "authentication", "permission_denied", "401", "403"]):
+            return False, "Authentication/Authorization error", "NON_RETRYABLE_AUTH"
+
+        # 2. Non-retryable prompt/parameter errors
+        if isinstance(exc, ValueError) and ("prompt must be" in exc_str or "required" in exc_str):
+            return False, "Invalid prompt parameter", "NON_RETRYABLE_PARAM"
+
+        # 3. Rate Limit (429)
+        if "rate_limit" in exc_str or "429" in exc_str or "rate limit" in exc_str:
+            return True, "Rate limit exceeded (429)", "TRANSIENT_RATE_LIMIT"
+
+        # 4. JSON validation / max tokens truncation
+        if any(term in exc_str for term in [
+            "json_validate_failed",
+            "failed to generate json",
+            "failed to validate json",
+            "max completion tokens reached",
+            "max_tokens",
+            "truncated",
+            "json_object",
+            "not valid json",
+            "did not evaluate to a json object",
+            "did not produce a dictionary"
+        ]) or isinstance(exc, (json.JSONDecodeError, SyntaxError)):
+            if "max completion tokens" in exc_str or "max_tokens" in exc_str:
+                return True, "Max completion tokens reached", "TRANSIENT_MAX_TOKENS"
+            return True, "JSON validation/parse failure", "TRANSIENT_JSON_VALIDATION"
+
+        # 5. Connection / Timeout / Server errors (500, 502, 503, 504, socket errors)
+        if any(term in exc_str for term in [
+            "timeout",
+            "connection",
+            "connect",
+            "network",
+            "500", "502", "503", "504",
+            "internal server error",
+            "bad gateway",
+            "service unavailable"
+        ]) or isinstance(exc, (TimeoutError, ConnectionError, OSError)):
+            return True, "Network/Server transient error", "TRANSIENT_SERVER_ERROR"
+
+        # Default fallback for GroqError or JSON errors: treat as retryable generation failure
+        if isinstance(exc, (GroqError, json.JSONDecodeError, ValueError, TypeError)):
+            return True, f"Transient LLM error ({type(exc).__name__})", "TRANSIENT_OTHER"
+
+        return False, f"Unhandled non-retryable error ({type(exc).__name__})", "NON_RETRYABLE_OTHER"
+
     def generate_json(self, prompt: str, service_name: str = "General") -> Dict[str, Any]:
-        """Generate structured JSON from a prompt using Groq."""
+        """Generate structured JSON from a prompt using Groq with automatic retry resilience."""
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Prompt must be a non-empty string.")
 
@@ -105,6 +160,11 @@ class LLMService:
         validation_failed = False
         final_status = "Failure"
         recorded = False
+        last_reason = "None"
+        last_category = "NONE"
+
+        # Backoff intervals for non-429 retries (in seconds): Attempt 1 -> 0.5s -> Attempt 2 -> 1.0s -> Attempt 3
+        backoffs = [0.5, 1.0]
 
         try:
             for attempt in range(1, 4):
@@ -112,13 +172,21 @@ class LLMService:
                 if attempt > 1:
                     retry_happened = True
 
+                # Adaptive recovery prompt on retries for JSON validation/token truncation errors
+                current_system_prompt = system_prompt
+                if attempt > 1 and last_category in ("TRANSIENT_JSON_VALIDATION", "TRANSIENT_MAX_TOKENS"):
+                    current_system_prompt = (
+                        "You are a strict, ultra-concise JSON generator. "
+                        "Reply ONLY with valid, compact JSON, without markdown fences or explanations."
+                    )
+
                 try:
                     start_req = time.perf_counter()
                     response = self.client.chat.completions.create(
                         model=self.model,
                         temperature=self.temperature,
                         messages=[
-                            {"role": "system", "content": system_prompt},
+                            {"role": "system", "content": current_system_prompt},
                             {"role": "user", "content": user_prompt},
                         ],
                         response_format={"type": "json_object"},
@@ -137,7 +205,7 @@ class LLMService:
                         raise
 
                     ext_dur = time.perf_counter() - start_ext
-                    logger.info("LLM JSON generation succeeded on attempt %s: %s", attempt, parsed)
+                    logger.info("LLM JSON generation succeeded on attempt %s (service: %s)", attempt, service_name)
                     logger.info("[LLM PERF INTERNAL]\nService: %s\nModel Response: %.2fs\nJSON Extraction: %.2fs", service_name, req_dur, ext_dur)
 
                     prompt_chars = len(prompt)
@@ -158,33 +226,55 @@ class LLMService:
                         retry_happened=retry_happened,
                         json_parse_failed=json_parse_failed,
                         validation_failed=validation_failed,
-                        final_status=final_status
+                        final_status=final_status,
+                        retry_reason=last_reason,
+                        failure_category=last_category,
                     )
                     recorded = True
                     return parsed
-                except (GroqError, ValueError, TypeError, json.JSONDecodeError) as exc:
-                    last_error = exc
 
-                    exc_str = str(exc).lower()
-                    if "json_validate_failed" in exc_str or "failed to validate json" in exc_str:
+                except Exception as exc:
+                    last_error = exc
+                    is_retryable, reason, category = self._is_retryable_error(exc)
+                    last_reason = reason
+                    last_category = category
+
+                    if category == "TRANSIENT_JSON_VALIDATION":
                         validation_failed = True
 
-                    if "rate_limit_exceeded" in exc_str or "429" in exc_str:
+                    logger.warning(
+                        "LLM JSON generation attempt %d/3 for %s failed [%s]: %s",
+                        attempt,
+                        service_name,
+                        category,
+                        exc,
+                    )
+
+                    # Non-retryable error -> Raise immediately without wasting retries
+                    if not is_retryable:
+                        logger.error("Non-retryable LLM error encountered for %s: %s", service_name, exc)
+                        raise
+
+                    # If this was the final attempt (attempt == 3), do not sleep; loop ends
+                    if attempt >= 3:
+                        break
+
+                    # Determine backoff duration
+                    exc_str = str(exc).lower()
+                    if category == "TRANSIENT_RATE_LIMIT":
                         match = re.search(r"try again in (\d+\.?\d*)s", exc_str)
                         wait_time = float(match.group(1)) + 1.0 if match else 15.0
                         logger.warning("Rate limit (429) hit for %s on attempt %d. Waiting %.2fs before retry...", service_name, attempt, wait_time)
                         time.sleep(wait_time)
-                        continue
-
-                    logger.warning(
-                        "LLM JSON generation attempt %s failed: %s",
-                        attempt,
-                        exc,
-                    )
+                    else:
+                        sleep_dur = backoffs[attempt - 1]
+                        logger.info("Retrying %s (attempt %d/3) after %.2fs backoff due to %s...", service_name, attempt + 1, sleep_dur, reason)
+                        time.sleep(sleep_dur)
 
             raise LLMGenerationError(
-                "Failed to generate valid JSON after 3 attempts."
+                f"Failed to generate valid JSON for {service_name} after 3 attempts. Last error: {last_error}"
             ) from last_error
+
         except Exception:
             if not recorded:
                 duration = time.perf_counter() - start_invocation
@@ -195,7 +285,9 @@ class LLMService:
                     retry_happened=retry_happened,
                     json_parse_failed=json_parse_failed,
                     validation_failed=validation_failed,
-                    final_status=final_status
+                    final_status=final_status,
+                    retry_reason=last_reason,
+                    failure_category=last_category,
                 )
             raise
 
@@ -207,7 +299,9 @@ class LLMService:
         retry_happened: bool,
         json_parse_failed: bool,
         validation_failed: bool,
-        final_status: str
+        final_status: str,
+        retry_reason: str = "None",
+        failure_category: str = "NONE",
     ) -> None:
         with self._lock:
             self._invocations.append({
@@ -217,7 +311,11 @@ class LLMService:
                 "retry_happened": retry_happened,
                 "json_parse_failed": json_parse_failed,
                 "validation_failed": validation_failed,
-                "final_status": final_status
+                "final_status": final_status,
+                "retry_reason": retry_reason,
+                "failure_category": failure_category,
+                "recovery_success": retry_happened and final_status == "Success",
+                "final_latency": duration,
             })
 
     def print_reliability_summary(self) -> None:
@@ -239,6 +337,7 @@ class LLMService:
         successful = sum(1 for inv in invocations if inv["final_status"] == "Success")
         failures = sum(1 for inv in invocations if inv["final_status"] == "Failure")
         retried = sum(1 for inv in invocations if inv["retry_happened"])
+        recoveries = sum(1 for inv in invocations if inv.get("recovery_success", False))
         retry_attempts = sum(inv["attempts"] - 1 for inv in invocations)
         parse_failures = sum(1 for inv in invocations if inv["json_parse_failed"])
         validation_failures = sum(1 for inv in invocations if inv["validation_failed"])
@@ -260,6 +359,8 @@ class LLMService:
         print(f"Successful: {successful}")
         print()
         print(f"Retried: {retried}")
+        print()
+        print(f"Automatic Recoveries: {recoveries}")
         print()
         print(f"Retry Attempts: {retry_attempts}")
         print()

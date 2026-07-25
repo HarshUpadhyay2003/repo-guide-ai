@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple
 
 from app.schema.repository_map import RepositoryMap
 from app.services.github_service import GitHubService
-from constants import ENABLE_PERF_DIAGNOSTICS, MAX_DIRECTORY_ENTRIES, ENABLE_DEEP_PROFILING
+from app.core.constants import ENABLE_PERF_DIAGNOSTICS, MAX_DIRECTORY_ENTRIES, ENABLE_DEEP_PROFILING
 
 # Cache imports
 from app.core.cache.dependencies import get_cache_manager

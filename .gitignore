@@ -205,11 +205,15 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
+# TypeScript & Build Info
 *.tsbuildinfo
 next-env.d.ts
 
-
-#random folders
+# Generated Artifacts & Reports
 generated/
 evaluation_outputs/
+*.log
+*.pdf
+structure.txt
+groq_model_report.json
+json_compatibility_report.json

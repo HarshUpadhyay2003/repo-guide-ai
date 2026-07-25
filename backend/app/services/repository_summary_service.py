@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict
 from app.services.llm_service import LLMService
 from app.utils.performance_utils import estimate_tokens
-from constants import ENABLE_DEEP_PROFILING
+from app.core.constants import ENABLE_DEEP_PROFILING
 
 # Cache imports
 from app.core.cache.dependencies import get_cache_manager

@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     "AI"
   ],
   icons: {
-    icon: "/logos/repo_pilot_icon.svg",
-    shortcut: "/logos/repo_pilot_icon.svg",
-    apple: "/logos/repo_pilot_icon.svg",
+    icon: "/logos/repo_pilot_icon_no_background.svg",
+    shortcut: "/logos/repo_pilot_icon_no_background.svg",
+    apple: "/logos/repo_pilot_icon_no_background.svg",
   },
   openGraph: {
     title: "RepoPilot",

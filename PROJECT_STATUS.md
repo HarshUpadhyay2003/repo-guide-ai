@@ -2,37 +2,33 @@
 
 **Project:** RepoPilot  
 **Tagline:** AI-Powered Open Source Contribution Assistant  
-**Current Version:** v0.1.0 (Backend MVP)
+**Current Version:** v1.0.0-beta (Beta Release)
 
 ## Current State
 
-The project has completed the **Backend MVP (v0.1.0)** phase. We have successfully realized the product evolution from an "AI Repository Summarizer" into a comprehensive "Open Source Contribution Assistant". 
+The project has achieved feature-complete **Beta Status (v1.0.0-beta)**. We have evolved RepoPilot from a backend proof-of-concept into a comprehensive full-stack Open Source Contribution Assistant.
 
-The core data processing pipeline, LLM integrations, and API endpoints are fully operational and have been validated against major open-source repositories (PostHog, LangChain, Supabase, Appwrite).
+Both the asynchronous FastAPI backend engine and the Next.js 16 (React 19) interactive dashboard are operational and validated against major open-source repositories (PostHog, LangChain, Supabase, Appwrite).
 
-## Completed Milestone: Backend MVP (v0.1.0)
+## Completed Milestones
 
-The following features and infrastructure are completed and deployed via the FastAPI application:
-
+### Milestone 1: Backend MVP (v0.1.0)
 - **Repository Summary**: Generation of repo purpose, tech stack, and difficulty evaluation.
 - **Repository Map**: Deterministic directory categorization (Frontend, Backend, Config, Docs, Tests, Other).
 - **Good First Issue Discovery**: Automated fetching of beginner-friendly issues via the GitHub Search API.
 - **Issue Analysis**: AI-driven generation of difficulty scores, required skills, affected system areas, and beginner explanations.
 - **Exploration Hints**: Predictive recommendations for directories and files to investigate, complete with AI reasoning.
-- **Infrastructure**: Fully structured JSON outputs via Pydantic, graceful error handling, Swagger testing environment, and multi-repository validation.
 
-## Under Development: Frontend App (v0.2.0)
-
-Development is now shifting to the user interface. The frontend is currently under development using **Next.js, TypeScript, TailwindCSS, and shadcn/ui**. Features currently being built include:
-
-- **Frontend Dashboard**: A centralized UI for developers to search and analyze repositories.
-- **Repository Visualization**: Graphical representation of the backend's repository map.
-- **Issue Detail UI**: An elegant interface for displaying the generated issue analysis and exploration hints side-by-side with the codebase logic.
+### Milestone 2: Beta Full-Stack Release (v1.0.0-beta)
+- **Next.js 16 (React 19) UI**: Interactive Dashboard, Repository Map visualization, Issue Discovery cards, and Exploration Hints drawer.
+- **Contributor Roadmap Service**: Generates structured step-by-step milestones to guide contributors from zero context to submitting a PR.
+- **Publication-Quality PDF Reports**: Backend ReportLab integration for generating downloadable PDF executive summaries and issue guides.
+- **Telemetry & Feedback Integration**: Integrated client-side telemetry tracking and Google Sheets webhook feedback modal.
+- **Singleflight & Rate Limiting**: In-flight request deduplication and sliding-window rate limiting for high-concurrency protection.
+- **Docker Support**: Containerized configuration via Docker Compose.
 
 ## Future Roadmap
 
-Looking beyond v0.2.0, the project will expand to include advanced contextual capabilities:
-
-- **Repository Embeddings & Semantic Search**: Vectorizing the codebase to allow natural language querying and precise, exact file localization.
-- **Issue Similarity Search**: Finding past solved issues similar to new ones to learn from previous Pull Requests.
-- **PR Guidance & Contribution Checklists**: Generating step-by-step guides to successfully prepare and submit a pull request.
+- **v1.1.0**: Codebase Vector Embeddings & Natural Language Semantic Search.
+- **v1.2.0**: PR Preparation Checklist Generator & Automated Draft PR Guidance.
+- **v1.3.0**: Issue Similarity Search against past closed Pull Requests.

@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 
 from app.schema.roadmap import RoadmapInput, RoadmapOutput
 from app.services.llm_service import LLMService
-from constants import ENABLE_PERF_DIAGNOSTICS
+from app.core.constants import ENABLE_PERF_DIAGNOSTICS
 from app.utils.file_ranking import score_file, get_candidate_files
 
 # Cache imports
@@ -196,111 +196,14 @@ class RoadmapService:
                     "possible_files": [],
                     "beginner_explanation": "Get started by setting up the repository and exploring the project structure."
                 }
-                best_issue_info = {
-                    "issue_number": 1,
-                    "title": "General Repository Setup"
-                }
 
-            # Extract fields for output generation
-            issue_title = selected_issue["title"]
-            difficulty = selected_issue["difficulty"]
-            affected_area = selected_issue["affected_area"]
-            skills_required = selected_issue["skills_required"]
-            beginner_explanation = selected_issue["beginner_explanation"]
-            likely_dirs = selected_issue["likely_directories"]
-            possible_files = selected_issue["possible_files"]
-
-            # Filter likely directories and possible files to prevent hallucinations
-            full_dirs_set = set(all_dirs)
-            full_files_set = set(all_files)
-            
-            # Extract valid map paths
-            valid_map_paths = set()
-            if isinstance(raw_map, dict):
-                for cat, paths in raw_map.items():
-                    if isinstance(paths, list):
-                        for p in paths:
-                            valid_map_paths.add(p)
-
-            # Standardized filter for files to read first
-            # Prioritize possible files, then likely directories
-            raw_files_to_read = list(possible_files) + list(likely_dirs)
-            
-            # Perform exact existence filtering
-            files_to_read_first = []
-            for path in raw_files_to_read:
-                if (path in full_files_set or 
-                    path in full_dirs_set or 
-                    path in valid_map_paths or 
-                    (not full_files_set and not full_dirs_set)):  # Allow local tests with empty sets
-                    if path not in files_to_read_first:
-                        files_to_read_first.append(path)
-            
-            # Limit to top 5 files to read first to keep it concise
-            files_to_read_first = files_to_read_first[:5]
-
-            # Construct why_this_issue
-            skills_str = ", ".join(skills_required) if skills_required else "general development concepts"
-            why_this_issue = (
-                f"We recommend starting with this issue because it is classified as '{difficulty}' difficulty and focuses on the "
-                f"'{affected_area}' area of the repository. Addressing it will help you gain familiarity with "
-                f"{skills_str}. {beginner_explanation}"
+            # Build roadmap using canonical helper
+            response = RoadmapService.build_issue_roadmap(
+                selected_issue,
+                all_files=all_files,
+                all_dirs=all_dirs,
+                raw_map=raw_map,
             )
-
-            # Construct recommended_learning_order
-            recommended_learning_order = []
-            if likely_dirs:
-                recommended_learning_order.append(
-                    f"Understand the repository structure, focusing on the key directories: {', '.join(likely_dirs[:2])}"
-                )
-            else:
-                recommended_learning_order.append("Familiarize yourself with the repository folder structure and README.")
-
-            if skills_required:
-                recommended_learning_order.append(
-                    f"Learn or review the core technologies required for this issue: {', '.join(skills_required)}"
-                )
-            else:
-                recommended_learning_order.append("Review basic contribution standards and workflow setup.")
-
-            recommended_learning_order.append(f"Explore the affected codebase area: '{affected_area}'")
-
-            # Construct contribution_plan
-            contribution_plan = [
-                "Clone the repository and set up the local development environment.",
-                f"Locate the '{affected_area}' module and examine key files: {', '.join(files_to_read_first[:3]) or 'relevant area'}."
-            ]
-            if issue_title:
-                contribution_plan.append(f"Try to reproduce the issue described: '{issue_title}'.")
-            contribution_plan.extend([
-                f"Implement the changes using {', '.join(skills_required) if skills_required else 'appropriate practices'}.",
-                "Write tests to verify your implementation and ensure all existing tests pass.",
-                "Open a Pull Request and detail your changes in the PR description."
-            ])
-
-            # Construct success_tips
-            success_tips = [
-                "Start small: focus only on the files recommended for this issue.",
-                "Write tests: adding tests increases the chance of your PR being merged.",
-                "Ask for feedback: engage with the community or maintainers early if you get stuck."
-            ]
-            
-            # Add language-specific premium tips
-            languages_lower = [s.lower() for s in skills_required]
-            if any(l in languages_lower for l in ["python", "django", "flask", "fastapi"]):
-                success_tips.append("Ensure your code follows PEP 8 styling conventions and has proper type hinting.")
-            if any(l in languages_lower for l in ["javascript", "typescript", "react", "nextjs", "node"]):
-                success_tips.append("Run the project's linter (e.g., ESLint or Prettier) before submitting your PR.")
-
-            # Build final response structure
-            response = {
-                "best_issue_to_start": best_issue_info,
-                "why_this_issue": why_this_issue,
-                "recommended_learning_order": recommended_learning_order,
-                "files_to_read_first": files_to_read_first,
-                "contribution_plan": contribution_plan,
-                "success_tips": success_tips
-            }
             assembly_dur = time.perf_counter() - assembly_start
 
             # Validate against Pydantic schema to ensure absolute compatibility
@@ -308,31 +211,128 @@ class RoadmapService:
             roadmap = RoadmapOutput.model_validate(response)
             validation_dur = time.perf_counter() - validation_start
             
-            roadmap_total_dur = time.perf_counter() - roadmap_total_start
-            
-            # Log metrics to console
-
-            # Save to self.metrics if available
-            if hasattr(self, "metrics") and isinstance(self.metrics, dict):
-                self.metrics["roadmap_ranking"] = ranking_dur
-                self.metrics["roadmap_assembly"] = assembly_dur
-                self.metrics["roadmap_validation"] = validation_dur
-                self.metrics["roadmap_total"] = roadmap_total_dur
-
             result_roadmap = roadmap.model_dump()
 
-            # 2. Cache Write Attempt
+            # Cache Write
             if key:
                 try:
-                    self.cache_manager.set(key, result_roadmap, CACHE_TTL_ROADMAP)
                     print("[CACHE WRITE][Roadmap]")
+                    self.cache_manager.set(key, result_roadmap, CACHE_TTL_ROADMAP)
                 except Exception as exc:
                     if isinstance(exc, (TypeError, ValueError)):
                         raise
-                    logger.warning("[CACHE] Cache write failed for key %s: %s", key, exc)
+                    logger.warning("[CACHE] Failed to set key %s: %s", key, exc)
 
             return result_roadmap
 
         except Exception as exc:
             logger.exception("Deterministic roadmap generation failed: %s", exc)
             raise RuntimeError("Failed to generate contributor roadmap.") from exc
+
+    @staticmethod
+    def build_issue_roadmap(
+        issue_item: Dict[str, Any],
+        all_files: List[str] | None = None,
+        all_dirs: List[str] | None = None,
+        raw_map: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        """Construct an issue-specific contribution roadmap for a single issue entry."""
+        if not isinstance(issue_item, dict):
+            issue_item = {}
+
+        raw = issue_item.get("raw_issue", {}) if "raw_issue" in issue_item else issue_item
+        analysis = issue_item.get("analysis", {}) if "analysis" in issue_item else issue_item
+        hints = issue_item.get("exploration_hints", {}) if "exploration_hints" in issue_item else issue_item
+
+        issue_number = raw.get("number") or issue_item.get("number") or 1
+        issue_title = raw.get("title") or issue_item.get("title") or "Recommended Issue"
+        difficulty = analysis.get("difficulty") or issue_item.get("difficulty") or "Beginner"
+        affected_area = analysis.get("affected_area") or issue_item.get("affected_area") or "General"
+        skills_required = analysis.get("skills_required") or issue_item.get("skills_required") or []
+        beginner_explanation = analysis.get("beginner_explanation") or issue_item.get("beginner_explanation") or ""
+        likely_dirs = hints.get("likely_directories") or issue_item.get("likely_directories") or []
+        possible_files = hints.get("possible_files") or issue_item.get("possible_files") or []
+
+        all_files = all_files or []
+        all_dirs = all_dirs or []
+        full_dirs_set = set(all_dirs)
+        full_files_set = set(all_files)
+
+        valid_map_paths = set()
+        if isinstance(raw_map, dict):
+            for cat, paths in raw_map.items():
+                if isinstance(paths, list):
+                    for p in paths:
+                        valid_map_paths.add(p)
+
+        raw_files_to_read = list(possible_files) + list(likely_dirs)
+        files_to_read_first = []
+        for path in raw_files_to_read:
+            if (path in full_files_set or 
+                path in full_dirs_set or 
+                path in valid_map_paths or 
+                (not full_files_set and not full_dirs_set)):
+                if path not in files_to_read_first:
+                    files_to_read_first.append(path)
+
+        files_to_read_first = files_to_read_first[:5]
+
+        skills_str = ", ".join(skills_required) if skills_required else "general development concepts"
+        why_this_issue = (
+            f"We recommend starting with this issue because it is classified as '{difficulty}' difficulty and focuses on the "
+            f"'{affected_area}' area of the repository. Addressing it will help you gain familiarity with "
+            f"{skills_str}. {beginner_explanation}"
+        ).strip()
+
+        recommended_learning_order = []
+        if likely_dirs:
+            recommended_learning_order.append(
+                f"Understand the repository structure, focusing on the key directories: {', '.join(likely_dirs[:2])}"
+            )
+        else:
+            recommended_learning_order.append("Familiarize yourself with the repository folder structure and README.")
+
+        if skills_required:
+            recommended_learning_order.append(
+                f"Learn or review the core technologies required for this issue: {', '.join(skills_required)}"
+            )
+        else:
+            recommended_learning_order.append("Review basic contribution standards and workflow setup.")
+
+        recommended_learning_order.append(f"Explore the affected codebase area: '{affected_area}'")
+
+        contribution_plan = [
+            "Clone the repository and set up the local development environment.",
+            f"Locate the '{affected_area}' module and examine key files: {', '.join(files_to_read_first[:3]) or 'relevant area'}."
+        ]
+        if issue_title:
+            contribution_plan.append(f"Try to reproduce the issue described: '{issue_title}'.")
+        contribution_plan.extend([
+            f"Implement the changes using {', '.join(skills_required) if skills_required else 'appropriate practices'}.",
+            "Write tests to verify your implementation and ensure all existing tests pass.",
+            "Open a Pull Request and detail your changes in the PR description."
+        ])
+
+        success_tips = [
+            "Start small: focus only on the files recommended for this issue.",
+            "Write tests: adding tests increases the chance of your PR being merged.",
+            "Ask for feedback: engage with the community or maintainers early if you get stuck."
+        ]
+
+        languages_lower = [s.lower() for s in skills_required]
+        if any(l in languages_lower for l in ["python", "django", "flask", "fastapi"]):
+            success_tips.append("Ensure your code follows PEP 8 styling conventions and has proper type hinting.")
+        if any(l in languages_lower for l in ["javascript", "typescript", "react", "nextjs", "node"]):
+            success_tips.append("Run the project's linter (e.g., ESLint or Prettier) before submitting your PR.")
+
+        return {
+            "best_issue_to_start": {
+                "issue_number": issue_number,
+                "title": issue_title
+            },
+            "why_this_issue": why_this_issue,
+            "recommended_learning_order": recommended_learning_order,
+            "files_to_read_first": files_to_read_first,
+            "contribution_plan": contribution_plan,
+            "success_tips": success_tips
+        }

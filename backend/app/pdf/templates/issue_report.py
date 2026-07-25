@@ -41,11 +41,24 @@ class IssueReportTemplate:
         owner = raw_issue.get("owner") or ""
         repo = raw_issue.get("repo") or ""
         
-        if not repo_name:
+        if repo_name and "/" in repo_name:
+            parts = repo_name.split("/", 1)
+            if not owner:
+                owner = parts[0]
+            if not repo:
+                repo = parts[1]
+
+        if not repo_name or "/" not in repo_name:
             if owner and repo:
                 repo_name = f"{owner}/{repo}"
             else:
                 repo_name = repo or "Unknown Repository"
+
+        # Ensure raw_issue contains owner and repo for link_builder
+        if owner and not raw_issue.get("owner"):
+            raw_issue["owner"] = owner
+        if repo and not raw_issue.get("repo"):
+            raw_issue["repo"] = repo
                 
         issue_title = raw_issue.get("title", "Untitled Issue")
         issue_number = raw_issue.get("number", "Unknown")

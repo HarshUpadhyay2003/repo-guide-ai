@@ -72,46 +72,52 @@ function ContributionContent() {
   }
 
   const { raw_issue, analysis, exploration_hints } = matchingIssue;
-  const roadmap = data.roadmap || {};
 
-  // Build dynamic contribution guide view data from real backend analysis payload
+  // Build dynamic contribution guide view data strictly from matching issue analysis
   const repository = `${owner}/${name}`;
   const summary = analysis?.beginner_explanation || `Dynamic contribution guide for Issue #${raw_issue.number}: ${raw_issue.title}`;
   const skills_needed = analysis?.skills_required || [];
-  
-  const rawLearningOrder = roadmap.recommended_learning_order || [];
-  const learning_path = rawLearningOrder.length > 0
-    ? rawLearningOrder.map((step: string, idx: number) => ({
-        title: `Step ${idx + 1}: ${step}`,
-        description: `Explore and familiarize yourself with ${step} in the codebase.`
-      }))
-    : [
-        { title: "Review Issue Requirements", description: `Read through issue #${raw_issue.number} and related comments.` },
-        { title: "Inspect Affected Subsystem", description: `Examine files in ${analysis?.affected_area || 'the target module'}.` },
-        { title: "Study Local Tests & Setup", description: "Run existing test suites locally before making edits." }
-      ];
+  const affectedArea = analysis?.affected_area || 'target subsystem';
+  const likelyDirs = exploration_hints?.likely_directories || [];
+
+  const learning_path = [
+    {
+      title: "1. Understand Directory Structure",
+      description: likelyDirs.length > 0
+        ? `Focus on key directories: ${likelyDirs.slice(0, 2).join(', ')}.`
+        : "Familiarize yourself with the repository structure and README."
+    },
+    {
+      title: "2. Review Required Technologies",
+      description: skills_needed.length > 0
+        ? `Study the core technologies: ${skills_needed.join(', ')}.`
+        : "Review project contribution standards and workflow setup."
+    },
+    {
+      title: "3. Inspect Affected Subsystem",
+      description: `Explore and trace execution paths in the '${affectedArea}' module.`
+    }
+  ];
 
   const possibleFiles = exploration_hints?.possible_files || [];
   const files_to_explore = possibleFiles.length > 0
     ? possibleFiles.map((path: string) => ({
         path,
-        reason: `Identified by RepoPilot AI as a key file for ${analysis?.affected_area || 'resolving this issue'}.`
+        reason: `Key file identified by RepoPilot AI for the '${affectedArea}' area.`
       }))
-    : (exploration_hints?.likely_directories || []).map((path: string) => ({
+    : likelyDirs.map((path: string) => ({
         path,
         reason: "Likely directory containing target code."
       }));
 
-  const rawPlan = roadmap.contribution_plan || [];
-  const workflow = rawPlan.length > 0
-    ? rawPlan
-    : [
-        "Clone the repository and create a feature branch for your changes.",
-        `Locate the '${analysis?.affected_area || 'target'}' components in your local development environment.`,
-        `Implement the fix for issue #${raw_issue.number}.`,
-        "Run localized test suites to ensure functionality passes.",
-        "Commit your work and submit a Pull Request referencing the issue."
-      ];
+  const workflow = [
+    "Clone the repository and set up the local development environment.",
+    `Locate the '${affectedArea}' module and examine relevant codebase files.`,
+    `Try to reproduce the issue described: '${raw_issue.title}'.`,
+    `Implement requested changes using ${skills_needed.length > 0 ? skills_needed.join(', ') : 'appropriate practices'}.`,
+    "Run local test suites to verify functionality passes cleanly.",
+    `Commit changes and submit a Pull Request addressing issue #${raw_issue.number}.`
+  ];
 
   const pr_checklist = [
     `Branch created from master/main addressing issue #${raw_issue.number}`,

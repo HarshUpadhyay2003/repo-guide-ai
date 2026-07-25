@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { X, ExternalLink, Send, MessageSquareHeart, Check } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { RatingStars } from '../ui/RatingStars';
@@ -12,9 +12,10 @@ import {
   MODULE_RATING_CATEGORIES,
   REPOPILOT_VERSION,
 } from '../../constants/feedback';
+import { collectSessionMetadata } from '../../services/analytics/metadataCollector';
 import { FeedbackPayload, ModuleRatings } from '../../types/feedback';
 
-export function FeedbackModal() {
+function FeedbackModalInner() {
   const { isFeedbackModalOpen, closeFeedbackModal, showToast } = useFeedback();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -66,15 +67,7 @@ export function FeedbackModal() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const metadata = {
-      repositoryName: repoParam,
-      issueNumber,
-      currentPage: pathname,
-      timestamp: new Date().toISOString(),
-      version: REPOPILOT_VERSION,
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
-      analysisDuration: null,
-    };
+    const metadata = collectSessionMetadata(repoParam, issueNumber, pathname, 'feedback_modal');
 
     const payload: FeedbackPayload = {
       overallRating,
@@ -313,5 +306,13 @@ export function FeedbackModal() {
         </form>
       </div>
     </div>
+  );
+}
+
+export function FeedbackModal() {
+  return (
+    <Suspense fallback={null}>
+      <FeedbackModalInner />
+    </Suspense>
   );
 }

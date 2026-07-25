@@ -86,7 +86,15 @@ class ContributionReportTemplate:
             possible_files = exploration_hints.get("possible_files", [])
             likely_directories = exploration_hints.get("likely_directories", [])
             reasoning = exploration_hints.get("reasoning", reasoning)
-            
+
+            from app.services.roadmap_service import RoadmapService
+            issue_roadmap = RoadmapService.build_issue_roadmap(
+                matching_issue,
+                raw_map=analysis_data.get("repository_map", {})
+            )
+        else:
+            issue_roadmap = roadmap
+
         # 1. Cover Page
         cover_metadata = {
             "Repository Name": name,
@@ -108,7 +116,7 @@ class ContributionReportTemplate:
         flowables.append(create_section_title("1. Contribution Goal"))
         flowables.append(Spacer(1, SPACING_SM))
         
-        why_this_issue = roadmap.get("why_this_issue", "")
+        why_this_issue = issue_roadmap.get("why_this_issue", "")
         if why_this_issue:
             flowables.append(Paragraph(f"<b>Recommendation Reason:</b> {why_this_issue}", styles['DocBody']))
             flowables.append(Spacer(1, SPACING_SM))
@@ -168,7 +176,7 @@ class ContributionReportTemplate:
         flowables.append(Spacer(1, SPACING_MD))
         
         # 4. Section 3: Repository Learning Path
-        learning_path = roadmap.get("recommended_learning_order", [])
+        learning_path = issue_roadmap.get("recommended_learning_order", [])
         flowables.append(create_section_title("3. Repository Learning Path"))
         flowables.append(Spacer(1, SPACING_SM))
         if learning_path:
@@ -180,7 +188,7 @@ class ContributionReportTemplate:
         flowables.append(Spacer(1, SPACING_MD))
         
         # 5. Section 4: Files To Explore
-        files_to_read = roadmap.get("files_to_read_first", [])
+        files_to_read = issue_roadmap.get("files_to_read_first", [])
         if not files_to_read:
             files_to_read = possible_files
             
@@ -217,7 +225,7 @@ class ContributionReportTemplate:
         flowables.append(Spacer(1, SPACING_MD))
         
         # 6. Section 5: Suggested Workflow
-        contribution_plan = roadmap.get("contribution_plan", [])
+        contribution_plan = issue_roadmap.get("contribution_plan", [])
         if not contribution_plan:
             contribution_plan = [
                 "Clone the repository and set up the local development environment.",

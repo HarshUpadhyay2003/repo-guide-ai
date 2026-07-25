@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { X, AlertTriangle, Copy, Check, ExternalLink, Send } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useFeedback } from '../../context/FeedbackContext';
 import { feedbackService } from '../../services/feedbackService';
 import { telemetryService } from '../../services/telemetryService';
 import { REPOPILOT_VERSION } from '../../constants/feedback';
+import { collectSessionMetadata } from '../../services/analytics/metadataCollector';
 import { AIIssuePayload } from '../../types/feedback';
 
-export function ReportAIIssueModal() {
+function ReportAIIssueModalInner() {
   const { isReportAIIssueModalOpen, closeReportAIIssueModal, reportAIContext, showToast } = useFeedback();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -63,14 +64,7 @@ Version: ${REPOPILOT_VERSION}`;
       repositoryName: repoParam,
       issueNumber,
       additionalNotes: notes,
-      metadata: {
-        repositoryName: repoParam,
-        issueNumber,
-        currentPage: pathname,
-        timestamp: new Date().toISOString(),
-        version: REPOPILOT_VERSION,
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
-      },
+      metadata: collectSessionMetadata(repoParam, issueNumber, pathname, 'ai_issue_modal'),
       createdAt: new Date().toISOString(),
     };
 
@@ -98,41 +92,41 @@ Version: ${REPOPILOT_VERSION}`;
     >
       <div className="relative w-full max-w-lg rounded-2xl border border-amber-500/30 bg-[#09090B] p-6 shadow-2xl text-slate-100 font-sans">
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-white/10 pb-4 mb-4">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400">
               <AlertTriangle className="h-5 w-5" />
             </div>
             <div>
-              <h2 id="report-ai-modal-title" className="text-lg font-bold text-white flex items-center gap-2">
-                Report AI Issue
+              <h2 id="report-ai-modal-title" className="text-base font-bold text-slate-50">
+                Report Issue in AI Analysis
               </h2>
               <p className="text-xs text-slate-400">
-                Found an inaccuracy, hallucination, or error in AI output?
+                Found inaccurate or unhelpful content in &ldquo;{sectionName}&rdquo;?
               </p>
             </div>
           </div>
           <button
             onClick={closeReportAIIssueModal}
-            aria-label="Close Report AI Issue Modal"
-            className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+            aria-label="Close modal"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-slate-100 transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Pre-filled Context Details */}
-        <div className="space-y-3 rounded-xl bg-amber-500/5 p-4 border border-amber-500/10 mb-4 text-xs font-mono">
-          <div className="flex justify-between items-center border-b border-amber-500/10 pb-2">
+        <div className="space-y-2 rounded-xl bg-amber-500/5 p-3 border border-amber-500/10 mb-4 text-xs font-sans">
+          <div className="flex justify-between items-center">
             <span className="text-slate-400">Target Section:</span>
             <span className="font-bold text-amber-300">{sectionName}</span>
           </div>
-          <div className="flex justify-between items-center border-b border-amber-500/10 pb-2">
+          <div className="flex justify-between items-center">
             <span className="text-slate-400">Repository:</span>
             <span className="font-bold text-slate-200">{repoParam}</span>
           </div>
           {issueNumber && (
-            <div className="flex justify-between items-center border-b border-amber-500/10 pb-2">
+            <div className="flex justify-between items-center">
               <span className="text-slate-400">Issue #:</span>
               <span className="font-bold text-slate-200">#{issueNumber}</span>
             </div>
@@ -193,5 +187,13 @@ Version: ${REPOPILOT_VERSION}`;
         </form>
       </div>
     </div>
+  );
+}
+
+export function ReportAIIssueModal() {
+  return (
+    <Suspense fallback={null}>
+      <ReportAIIssueModalInner />
+    </Suspense>
   );
 }

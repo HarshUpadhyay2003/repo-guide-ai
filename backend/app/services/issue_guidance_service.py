@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from app.schema.issue_guidance import IssueGuidanceInput, IssueGuidanceOutput
 from app.services.llm_service import LLMGenerationError, LLMService
 from app.utils.file_ranking import score_file, get_candidate_files, infer_issue_category, extract_keywords, get_path_category
-from constants import ENABLE_PERF_DIAGNOSTICS
+from app.core.constants import ENABLE_PERF_DIAGNOSTICS
 from app.utils.performance_utils import estimate_tokens
 from app.utils.evidence_extractor import TechnicalEvidenceItem, extract_technical_evidence
 from app.utils.classification_reconciler import reconcile_issue_classification, ClassificationReconciliationResult

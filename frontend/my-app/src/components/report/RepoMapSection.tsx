@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FolderTree, Folder, ChevronDown } from "lucide-react";
-import { RepositoryMap } from "../../../repository";
+import { RepositoryMap } from "@/types/repository";
 import { ReportAIIssueButton } from "../feedback/ReportAIIssueButton";
 
 interface RepoMapSectionProps {

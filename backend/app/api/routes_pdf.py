@@ -37,7 +37,7 @@ def get_repository_pdf(
     
     start_time = time.perf_counter()
     try:
-        pdf_bytes = RepositoryReportTemplate.generate(repo_name=repo, analysis_data=snapshot)
+        pdf_bytes = RepositoryReportTemplate.generate(repo_name=f"{owner}/{repo}", analysis_data=snapshot)
     except Exception as exc:
         logger.exception("Failed to generate Repository PDF")
         raise HTTPException(
@@ -96,7 +96,7 @@ def get_issue_pdf(
     
     start_time = time.perf_counter()
     try:
-        pdf_bytes = IssueReportTemplate.generate(issue_data=matching_issue, repo_name=repo)
+        pdf_bytes = IssueReportTemplate.generate(issue_data=matching_issue, repo_name=f"{owner}/{repo}")
     except Exception as exc:
         logger.exception("Failed to generate Issue PDF")
         raise HTTPException(
@@ -140,7 +140,7 @@ def get_contribution_pdf(
     
     start_time = time.perf_counter()
     try:
-        pdf_bytes = ContributionReportTemplate.generate(repo_name=repo, analysis_data=snapshot, issue_number=issue_number)
+        pdf_bytes = ContributionReportTemplate.generate(repo_name=f"{owner}/{repo}", analysis_data=snapshot, issue_number=issue_number)
     except Exception as exc:
         logger.exception("Failed to generate Contribution PDF")
         raise HTTPException(

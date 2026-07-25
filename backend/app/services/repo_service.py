@@ -14,7 +14,7 @@ from app.services.issue_guidance_service import IssueGuidanceService
 from app.services.roadmap_service import RoadmapService
 from app.services.repository_map_service import RepositoryMapService
 from app.utils.github_parser import parse_github_url
-from constants import MAX_ANALYSIS_ISSUES, ENABLE_PARALLEL_ANALYSIS, ENABLE_PERF_DIAGNOSTICS, ENABLE_DEEP_PROFILING
+from app.core.constants import MAX_ANALYSIS_ISSUES, ENABLE_PARALLEL_ANALYSIS, ENABLE_PERF_DIAGNOSTICS, ENABLE_DEEP_PROFILING
 
 logger = logging.getLogger(__name__)
 

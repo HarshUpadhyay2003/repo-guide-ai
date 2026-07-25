@@ -9,7 +9,7 @@ from github import Auth, Github, GithubException
 from github.Repository import Repository
 
 from app.core.config import settings
-from constants import ENABLE_DEEP_PROFILING
+from app.core.constants import ENABLE_DEEP_PROFILING
 
 # Cache imports
 from app.core.cache.dependencies import get_cache_manager

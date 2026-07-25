@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Star, GitFork, Code2, ChevronDown, Download, Loader2, FileText } from "lucide-react";
-import { RepositoryMetadata } from "../../../repository";
+import { RepositoryMetadata } from "@/types/repository";
 import { downloadRepositoryGuide, downloadContributionGuide, downloadIssueGuide } from "../../services/pdfService";
 
 interface RepoHeaderProps {

@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 from app.schema.exploration_hints import ExplorationHintsInput, ExplorationHintsOutput
 from app.services.llm_service import LLMGenerationError, LLMService
-from constants import ENABLE_PERF_DIAGNOSTICS
+from app.core.constants import ENABLE_PERF_DIAGNOSTICS
 from app.utils.file_ranking import score_file, get_candidate_files
 
 logger = logging.getLogger(__name__)

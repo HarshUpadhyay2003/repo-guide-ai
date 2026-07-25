@@ -1,5 +1,5 @@
 import { Target, Clock, AlertTriangle, Layers, BookOpen, Lightbulb } from "lucide-react";
-import { RepositorySummary } from "../../../repository";
+import { RepositorySummary } from "@/types/repository";
 import { ReportAIIssueButton } from "../feedback/ReportAIIssueButton";
 
 interface RepoSummaryCardProps {

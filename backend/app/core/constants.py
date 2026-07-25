@@ -1,3 +1,7 @@
+"""
+Application-wide operational constants and feature flags.
+"""
+
 MAX_ANALYSIS_ISSUES = 2
 MAX_COMMENTS_PER_ISSUE = 5
 MAX_COMMENT_LENGTH = 500
