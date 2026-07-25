@@ -15,7 +15,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -216,4 +215,4 @@ evaluation_outputs/
 *.pdf
 structure.txt
 groq_model_report.json
-json_compatibility_report.json
+json_compatibility_report.json
