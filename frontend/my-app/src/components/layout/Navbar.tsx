@@ -36,36 +36,45 @@ function NavbarInner() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#09090B]/80 backdrop-blur-md font-sans">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <img
             src="/logos/repo_pilot_icon_no_background.svg"
             alt="RepoPilot Logo"
             style={{ height: "32px", width: "auto" }}
           />
-          <span className="text-xl font-bold tracking-tight text-slate-50">RepoPilot</span>
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-50">RepoPilot</span>
         </Link>
-        <div className="flex items-center gap-6 text-sm font-semibold text-slate-300">
+        <div className="flex items-center gap-3 sm:gap-6 text-sm font-semibold text-slate-300">
           <a
             href={docsUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleDocsClick}
-            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6]"
+            title="Documentation"
+            aria-label="Documentation"
+            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6] p-1 sm:p-0"
           >
-            <Book className="h-4 w-4" /> <span className="hidden sm:inline">Documentation</span>
+            <Book className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Documentation</span>
           </a>
           <a
             href={githubNav.url}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleGitHubClick}
-            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6]"
+            title="GitHub Repository"
+            aria-label="GitHub Repository"
+            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6] p-1 sm:p-0"
           >
-            <GitBranch className="h-4 w-4" /> <span className="hidden sm:inline">GitHub</span>
+            <GitBranch className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">GitHub</span>
           </a>
-          <Link href="/" className="flex items-center gap-2 text-[#8B5CF6] transition-colors hover:text-[#7C3AED]">
-            <Search className="h-4 w-4" /> Analyze Repository
+          <Link 
+            href="/" 
+            title="Analyze Repository"
+            aria-label="Analyze Repository"
+            className="flex items-center gap-2 text-[#8B5CF6] transition-colors hover:text-[#7C3AED] whitespace-nowrap p-1 sm:p-0"
+          >
+            <Search className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Analyze Repository</span>
           </Link>
         </div>
       </div>
@@ -77,34 +86,43 @@ function NavbarFallback() {
   const docsUrl = getDocumentationUrl();
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#09090B]/80 backdrop-blur-md font-sans">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <img
             src="/logos/repo_pilot_icon_no_background.svg"
             alt="RepoPilot Logo"
             style={{ height: "32px", width: "auto" }}
           />
-          <span className="text-xl font-bold tracking-tight text-slate-50">RepoPilot</span>
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-50">RepoPilot</span>
         </Link>
-        <div className="flex items-center gap-6 text-sm font-semibold text-slate-300">
+        <div className="flex items-center gap-3 sm:gap-6 text-sm font-semibold text-slate-300">
           <a
             href={docsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6]"
+            title="Documentation"
+            aria-label="Documentation"
+            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6] p-1 sm:p-0"
           >
-            <Book className="h-4 w-4" /> <span className="hidden sm:inline">Documentation</span>
+            <Book className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Documentation</span>
           </a>
           <a
             href="https://github.com/HarshUpadhyay2003/repo-guide-ai"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6]"
+            title="GitHub Repository"
+            aria-label="GitHub Repository"
+            className="flex items-center gap-2 transition-colors hover:text-[#8B5CF6] p-1 sm:p-0"
           >
-            <GitBranch className="h-4 w-4" /> <span className="hidden sm:inline">GitHub</span>
+            <GitBranch className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">GitHub</span>
           </a>
-          <Link href="/" className="flex items-center gap-2 text-[#8B5CF6] transition-colors hover:text-[#7C3AED]">
-            <Search className="h-4 w-4" /> Analyze Repository
+          <Link 
+            href="/" 
+            title="Analyze Repository"
+            aria-label="Analyze Repository"
+            className="flex items-center gap-2 text-[#8B5CF6] transition-colors hover:text-[#7C3AED] whitespace-nowrap p-1 sm:p-0"
+          >
+            <Search className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Analyze Repository</span>
           </Link>
         </div>
       </div>
