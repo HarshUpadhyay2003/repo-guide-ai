@@ -31,6 +31,16 @@ function PreviewCard({ title, description, icon: Icon, imageSrc }: PreviewCardPr
   );
 }
 
+/**
+ * PreviewSection Component
+ *
+ * NOTE FOR DEVELOPERS (v1.1 Marketing Refresh):
+ * This component is temporarily disabled on the landing page for the v1.0 public beta.
+ * For v1.1, this section will be re-enabled in page.tsx and updated to showcase:
+ * 1. Animated product GIFs demonstrating repository analysis flow & issue breakdown
+ * 2. Real product demonstrations and interactive walkthroughs
+ * 3. Live repository previews (replacing static "Screenshot Coming Soon" placeholders)
+ */
 export function PreviewSection() {
   return (
     <section className="overflow-hidden px-6 py-24 lg:px-8">

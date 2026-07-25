@@ -15,7 +15,8 @@ export default function LandingPage() {
       <ProblemSection />
       <FeaturesSection />
       <HowItWorksSection />
-      <PreviewSection />
+      {/* TODO(v1.1): Re-enable Example Output Preview after creating production animated GIF demonstrations */}
+      {/* <PreviewSection /> */}
       <ValidatedSection />
       <FinalCtaSection />
     </div>
