@@ -225,15 +225,25 @@ Access Frontend at `http://localhost:3000` and Backend API at `http://localhost:
 | `GROQ_API_KEY` | Yes | Groq API Key for LLM inference |
 | `MODEL_NAME` | Yes | LLM model identifier (default: `llama-3.3-70b-versatile`) |
 | `DATABASE_URL` | No | Database connection string |
+| `ALLOWED_ORIGINS` | No | Comma-separated CORS allowed origins (`http://localhost:3000,https://repo-guide-ai.vercel.app`) |
 | `CACHE_BACKEND` | No | Cache driver (`memory` or `redis`) |
 
 ### Frontend (`frontend/my-app/.env.local`)
 | Variable | Required | Description |
 | :--- | :---: | :--- |
-| `NEXT_PUBLIC_API_URL` | Yes | Base URL for FastAPI Backend (`http://localhost:8000`) |
+| `NEXT_PUBLIC_API_BASE_URL` | Yes | Base URL for FastAPI Backend (`http://localhost:8000` or production `https://repo-pilot-backend-math.onrender.com`) |
 | `NEXT_PUBLIC_REPOPILOT_VERSION` | Yes | App version identifier (`v1.0.0-beta`) |
 | `NEXT_PUBLIC_GOOGLE_FORM_URL` | No | Feedback form URL |
 | `NEXT_PUBLIC_GOOGLE_SHEETS_WEBHOOK_URL` | No | Feedback submission webhook endpoint |
+
+---
+
+## Production Deployment
+
+- **Frontend Deployment (Vercel)**: `https://repo-guide-ai.vercel.app`
+  - Environment Variable: Set `NEXT_PUBLIC_API_BASE_URL=https://repo-pilot-backend-math.onrender.com` in Vercel project settings.
+- **Backend Deployment (Render)**: `https://repo-pilot-backend-math.onrender.com`
+  - Environment Variable: Set `ALLOWED_ORIGINS=https://repo-guide-ai.vercel.app,http://localhost:3000` in Render service environment settings.
 
 ---
 

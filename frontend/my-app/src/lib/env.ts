@@ -13,6 +13,10 @@ function validateEnv(val: string | undefined, name: string): string {
 }
 
 export const ENV = {
+  API_BASE_URL:
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://localhost:8000',
   GOOGLE_FORM_URL: validateEnv(
     process.env.NEXT_PUBLIC_GOOGLE_FORM_URL,
     'NEXT_PUBLIC_GOOGLE_FORM_URL'

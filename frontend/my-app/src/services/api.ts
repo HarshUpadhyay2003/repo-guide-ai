@@ -1,8 +1,8 @@
 import axios from 'axios';
+import { ENV } from '../lib/env';
 
 export const apiClient = axios.create({
-  // Fallback to localhost if env var is missing
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+  baseURL: ENV.API_BASE_URL,
   // generous timeout for LLM generation tasks
   timeout: 60000, 
   headers: {

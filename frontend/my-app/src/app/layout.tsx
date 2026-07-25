@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://repopilot.ai"),
+  metadataBase: new URL("https://repo-guide-ai.vercel.app"),
   title: {
     default: "RepoPilot",
     template: "%s | RepoPilot",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "RepoPilot",
     description: "AI-powered repository onboarding for open-source contributors.",
-    url: "https://repopilot.ai",
+    url: "https://repo-guide-ai.vercel.app",
     siteName: "RepoPilot",
     images: [
       {
